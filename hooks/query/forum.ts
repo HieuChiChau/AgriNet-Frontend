@@ -11,10 +11,20 @@ const forumKeys = {
     ["forum", "posts", id, "comments"] as const,
 };
 
-export function useForumPosts() {
+interface UseForumPostsParams {
+  categoryName?: string;
+  productName?: string;
+  price?: string;
+  quantity?: string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+}
+
+export function useForumPosts(params?: UseForumPostsParams) {
   return useQuery({
-    queryKey: forumKeys.posts,
-    queryFn: () => forumService.getPosts(),
+    queryKey: [...forumKeys.posts, params],
+    queryFn: () => forumService.getPosts(params),
     staleTime: 0,
   });
 }

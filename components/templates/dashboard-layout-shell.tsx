@@ -14,15 +14,12 @@ import { Icons } from "@/components/icons";
 import { NavLinkItem } from "@/constants/navigation";
 import { useMobileMenu } from "@/hooks/use-mobile-menu";
 import { useUser } from "@/hooks/use-user";
-import { UserRole } from "@/constants/role";
 
 interface DashboardLayoutShellProps {
   title: string;
   subtitle: string;
-  userLabel: string;
   backgroundClass?: string;
   logoGradientClass?: string;
-  userBadgeGradientClass?: string;
   navItems: NavLinkItem[];
   children: ReactNode;
   onLogout: () => void;
@@ -33,15 +30,12 @@ interface DashboardLayoutShellProps {
 
 const defaultBg = "from-green-50 via-white to-yellow-50";
 const defaultLogoGradient = "from-green-500 to-green-600";
-const defaultUserBadgeGradient = "from-green-400 to-green-500";
 
 export function DashboardLayoutShell({
   title,
   subtitle,
-  userLabel,
   backgroundClass = defaultBg,
   logoGradientClass = defaultLogoGradient,
-  userBadgeGradientClass = defaultUserBadgeGradient,
   navItems,
   children,
   onLogout,

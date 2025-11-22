@@ -3,13 +3,13 @@ import { PostCard } from "@/components/molecules/post/post-card";
 import { Skeleton } from "@/components/atoms/skeleton";
 
 interface PostListProps {
-  posts: Post[];
+  posts?: Post[];
   isLoading?: boolean;
   emptyMessage?: string;
 }
 
 export function PostList({
-  posts,
+  posts = [],
   isLoading = false,
   emptyMessage = "Chưa có bài đăng nào",
 }: PostListProps) {
@@ -27,7 +27,7 @@ export function PostList({
     );
   }
 
-  if (posts.length === 0) {
+  if (!posts || posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <p className="text-muted-foreground">{emptyMessage}</p>

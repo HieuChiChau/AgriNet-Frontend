@@ -25,7 +25,6 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
       <DashboardLayoutShell
         title="AgriNet"
         subtitle="AgriNet Admin"
-        userLabel="Quản trị viên"
         navItems={AdminNavItems}
         onLogout={handleLogout}
         userName={user?.name || "Admin"}

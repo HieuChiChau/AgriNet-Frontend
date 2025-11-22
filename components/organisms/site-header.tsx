@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/atoms/button";
 import {
   DropdownMenu,
@@ -16,8 +17,8 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/use-user";
 import { UserRole } from "@/constants/role";
 import { useMobileMenu } from "@/hooks/use-mobile-menu";
-import { useLogoutMutation } from "@/hooks/mutations/use-auth";
-import { useScroll } from "@/hooks/use-scroll";
+import { authService } from "@/lib/services";
+import { useToast } from "@/hooks/use-toast";
 
 const publicLinks = [
   { label: "Trang chủ", href: "/" },
@@ -44,10 +45,10 @@ const dashboardPrefixes = ["/farmer", "/customer", "/manage"];
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { user } = useUser();
+  const router = useRouter();
+  const { toast } = useToast();
+  const { user, logout } = useUser();
   const { isOpen, toggle, close } = useMobileMenu();
-  const logoutMutation = useLogoutMutation();
-  const { isScrolled } = useScroll();
 
   const shouldHide = dashboardPrefixes.some((prefix) =>
     pathname.startsWith(prefix)
@@ -67,8 +68,15 @@ export function SiteHeader() {
     return specific?.href ?? "/";
   }, [user]);
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      logout();
+      router.push("/");
+      toast({ title: "Đăng xuất thành công" });
+    } catch (error) {
+      toast({ title: "Đăng xuất thất bại", variant: "destructive" });
+    }
   };
 
   if (shouldHide) {
@@ -98,19 +106,8 @@ export function SiteHeader() {
       );
     });
 
-  const isLandingPage = pathname === "/";
-
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 border-b transition-all duration-300",
-        isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-md border-green-100"
-          : isLandingPage
-          ? "bg-white/80 backdrop-blur-sm border-green-100/50"
-          : "bg-white/90 backdrop-blur-sm border-green-100"
-      )}
-    >
+    <header className="border-b border-green-100 bg-white/90 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600">

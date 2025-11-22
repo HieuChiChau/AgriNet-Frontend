@@ -17,6 +17,12 @@ export enum ProductCategory {
   OTHER = "other",
 }
 
+export enum Category {
+  VEGETABLE = "Rau củ",
+  FRUIT = "Cây ăn quả",
+  INDUSTRIAL_PLANT = "Cây công nghiệp",
+}
+
 export interface Post {
   id: string | number;
   title: string;

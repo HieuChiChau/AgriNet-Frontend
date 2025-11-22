@@ -70,12 +70,20 @@ function transformApiPostToPost(apiPost: ApiPostItem): Post {
       ? "tấn"
       : "kg",
     location: {
-      province: (apiPost.address || apiPost.user.address)
-        ? (apiPost.address || apiPost.user.address).split(",").slice(-2, -1)[0]?.trim() || ""
-        : "",
-      district: (apiPost.address || apiPost.user.address)
-        ? (apiPost.address || apiPost.user.address).split(",").slice(-3, -2)[0]?.trim() || ""
-        : "",
+      province:
+        apiPost.address || apiPost.user.address
+          ? (apiPost.address || apiPost.user.address)
+              .split(",")
+              .slice(-2, -1)[0]
+              ?.trim() || ""
+          : "",
+      district:
+        apiPost.address || apiPost.user.address
+          ? (apiPost.address || apiPost.user.address)
+              .split(",")
+              .slice(-3, -2)[0]
+              ?.trim() || ""
+          : "",
       address: apiPost.address || apiPost.user.address || "",
       coordinates: {
         lat: parseFloat(apiPost.latitude || apiPost.user.latitude) || 0,
@@ -122,20 +130,64 @@ function transformPostToForumPost(post: Post): ForumPost {
 }
 
 export const forumService = {
-  getPosts: async (): Promise<ForumPost[]> => {
+  getPosts: async (params?: {
+    categoryName?: string;
+    productName?: string;
+    price?: string;
+    quantity?: string;
+    latitude?: number;
+    longitude?: number;
+    address?: string;
+  }): Promise<ForumPost[]> => {
+    const queryParams = new URLSearchParams();
+
+    if (params?.categoryName) {
+      queryParams.append("categoryName", params.categoryName);
+    }
+    if (params?.productName) {
+      queryParams.append("productName", params.productName);
+    }
+    if (params?.price) {
+      queryParams.append("price", params.price);
+    }
+    if (params?.quantity) {
+      queryParams.append("quantity", params.quantity);
+    }
+    if (params?.address) {
+      queryParams.append("address", params.address);
+    }
+    if (params?.latitude !== undefined && params.latitude !== null) {
+      queryParams.append("latitude", params.latitude.toString());
+    }
+    if (params?.longitude !== undefined && params.longitude !== null) {
+      queryParams.append("longitude", params.longitude.toString());
+    }
+
+    const url = queryParams.toString()
+      ? `${ApiUrl.POSTS}?${queryParams.toString()}`
+      : ApiUrl.POSTS;
+
     const response = await httpRequest.get<{
       status: string;
-      result: {
-        data: ApiPostItem[];
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-      };
+      result:
+        | ApiPostItem[]
+        | {
+            data: ApiPostItem[];
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+          };
       message?: string;
-    }>(ApiUrl.POSTS);
+    }>(url);
 
-    const apiPosts = response.data.result?.data || [];
+    // Handle both response formats: array directly or object with data property
+    let apiPosts: ApiPostItem[] = [];
+    if (Array.isArray(response.data.result)) {
+      apiPosts = response.data.result;
+    } else if (response.data.result?.data) {
+      apiPosts = response.data.result.data;
+    }
 
     const posts = apiPosts.map(transformApiPostToPost);
     return posts.map(transformPostToForumPost);

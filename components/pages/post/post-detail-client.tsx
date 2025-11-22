@@ -127,19 +127,15 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
   const getTimeAgo = (dateString?: string) => {
     if (!dateString || dateString.trim() === "") return "";
     try {
-      // Parse ISO 8601 date string (ví dụ: "2025-11-22T17:45:22.939Z")
       const date = new Date(dateString);
       const now = new Date();
 
-      // Kiểm tra date có hợp lệ không
       if (isNaN(date.getTime())) {
         return "";
       }
 
-      // Tính toán chênh lệch thời gian (milliseconds)
       const diffInMs = now.getTime() - date.getTime();
 
-      // Nếu date trong tương lai (có thể do lỗi), trả về empty
       if (diffInMs < 0) {
         return "";
       }
@@ -162,7 +158,6 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
         return `${diffInDays} ngày trước`;
       }
 
-      // Với thời gian dài hơn, dùng formatDistanceToNow
       const result = formatDistanceToNow(date, { addSuffix: false, locale: vi });
       return `${result} trước`;
     } catch {

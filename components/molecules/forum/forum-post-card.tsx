@@ -13,26 +13,21 @@ interface ForumPostCardProps {
 }
 
 function getTimeAgo(dateString?: string | null) {
-  // Kiểm tra dateString có tồn tại và không rỗng
   if (!dateString || (typeof dateString === "string" && dateString.trim() === "")) {
     return "";
   }
 
   try {
-    // Parse ISO 8601 date string (ví dụ: "2025-11-22T17:45:22.939Z")
     const trimmedDate = String(dateString).trim();
     const date = new Date(trimmedDate);
     const now = new Date();
 
-    // Kiểm tra date có hợp lệ không
     if (isNaN(date.getTime())) {
       return "";
     }
 
-    // Tính toán chênh lệch thời gian (milliseconds)
     const diffInMs = now.getTime() - date.getTime();
 
-    // Nếu date trong tương lai (có thể do lỗi), trả về empty
     if (diffInMs < 0) {
       return "";
     }
@@ -55,7 +50,6 @@ function getTimeAgo(dateString?: string | null) {
       return `${diffInDays} ngày trước`;
     }
 
-    // Với thời gian dài hơn, dùng formatDistanceToNow
     const result = formatDistanceToNow(date, { addSuffix: false, locale: vi });
     return `${result} trước`;
   } catch (error) {
@@ -64,7 +58,6 @@ function getTimeAgo(dateString?: string | null) {
 }
 
 export function ForumPostCard({ post }: ForumPostCardProps) {
-  // Ưu tiên createdAt, nếu không có thì dùng updatedAt
   const timeAgo = getTimeAgo(post.createdAt || post.updatedAt);
 
   return (

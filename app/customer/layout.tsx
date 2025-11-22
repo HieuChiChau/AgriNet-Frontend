@@ -24,13 +24,11 @@ export default function CustomerLayout({
     <DashboardLayoutShell
       title="AgriNet"
       subtitle="AgriNet Customer"
-      userLabel="Khách hàng"
       navItems={CustomerNavItems}
       onLogout={handleLogout}
       userName={user?.name}
       rootPath={pathname || "/customer"}
       userHomePath="/customer"
-      userBadgeGradientClass="from-yellow-400 to-yellow-500"
     >
       {children}
     </DashboardLayoutShell>

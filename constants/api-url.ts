@@ -30,4 +30,7 @@ export const ApiUrl = {
 
   // Users
   GET_USERS: "/users/list-user",
+
+  // Chat
+  CREATE_MESSAGE: "/users/create-message",
 };

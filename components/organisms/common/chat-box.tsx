@@ -5,9 +5,11 @@ import { Button } from "@/components/atoms/button";
 import { cn } from "@/lib/utils";
 import { X, MessageCircle, Send, Bot, Sparkles } from "lucide-react";
 import { Input } from "@/components/atoms/input";
+import { useCreateMessageMutation } from "@/hooks/mutations/chat";
 
 export function ChatBox() {
   const [isOpen, setIsOpen] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Array<{ id: number; text: string; sender: "user" | "ai"; timestamp: Date }>>([
     {
       id: 1,
@@ -19,6 +21,7 @@ export function ChatBox() {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const createMessageMutation = useCreateMessageMutation();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,11 +32,12 @@ export function ChatBox() {
   }, [messages, isTyping]);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || isTyping) return;
+    if (!inputValue.trim() || isTyping || createMessageMutation.isPending) return;
 
+    const userMessage = inputValue.trim();
     const newMessage = {
       id: messages.length + 1,
-      text: inputValue,
+      text: userMessage,
       sender: "user" as const,
       timestamp: new Date(),
     };
@@ -42,16 +46,67 @@ export function ChatBox() {
     setInputValue("");
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const payload = {
+        message: userMessage,
+        ...(sessionId && { session_id: sessionId }),
+      };
+
+      const response = await createMessageMutation.mutateAsync(payload);
+
+      // Lưu session_id từ response
+      if (response.session_id) {
+        setSessionId(response.session_id);
+      }
+
+      // Ensure response is a string, handle if it's an object
+      let responseText: string;
+      if (typeof response.response === "string") {
+        responseText = response.response;
+      } else if (typeof response.response === "object" && response.response !== null) {
+        // If response is an object, format it nicely
+        try {
+          // Check if it's an object with the expected structure
+          const obj = response.response as any;
+          if (obj.product || obj.region || obj.market_price !== undefined) {
+            // Format as readable text
+            responseText = `📊 Thông tin dự báo:\n\n`;
+            if (obj.product) responseText += `🌾 Sản phẩm: ${obj.product}\n`;
+            if (obj.region) responseText += `📍 Khu vực: ${obj.region}\n`;
+            if (obj.market_price !== undefined) responseText += `💰 Giá thị trường: ${obj.market_price.toLocaleString("vi-VN")} VND\n`;
+            if (obj.predicted_price !== undefined) responseText += `🔮 Giá dự báo: ${obj.predicted_price.toLocaleString("vi-VN")} VND\n`;
+            if (obj.suggested_price !== undefined) responseText += `💡 Giá đề xuất: ${obj.suggested_price.toLocaleString("vi-VN")} VND\n`;
+          } else {
+            // Generic object, stringify it
+            responseText = JSON.stringify(response.response, null, 2);
+          }
+        } catch {
+          responseText = String(response.response);
+        }
+      } else {
+        responseText = String(response.response || "");
+      }
+
       const aiResponse = {
         id: messages.length + 2,
-        text: "Cảm ơn bạn đã hỏi! Tôi đang xử lý câu hỏi của bạn. Tính năng này sẽ được tích hợp với AI trong thời gian tới.",
+        text: responseText,
         sender: "ai" as const,
         timestamp: new Date(),
       };
+
       setMessages((prev) => [...prev, aiResponse]);
+    } catch (error) {
+      // Error đã được xử lý trong mutation hook (toast)
+      const errorResponse = {
+        id: messages.length + 2,
+        text: "Xin lỗi, tôi không thể xử lý câu hỏi của bạn lúc này. Vui lòng thử lại sau.",
+        sender: "ai" as const,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -166,7 +221,7 @@ export function ChatBox() {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Nhập câu hỏi của bạn..."
-                  disabled={isTyping}
+                  disabled={isTyping || createMessageMutation.isPending}
                   className="pr-10 border-green-200 focus:border-green-400 focus:ring-green-400 rounded-xl"
                 />
                 {inputValue && (
@@ -180,7 +235,7 @@ export function ChatBox() {
               </div>
               <Button
                 onClick={handleSend}
-                disabled={!inputValue.trim() || isTyping}
+                disabled={!inputValue.trim() || isTyping || createMessageMutation.isPending}
                 className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl h-10 w-10"
                 size="icon"
               >

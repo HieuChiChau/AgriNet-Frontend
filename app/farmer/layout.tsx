@@ -24,7 +24,6 @@ export default function FarmerLayout({
     <DashboardLayoutShell
       title="AgriNet"
       subtitle="AgriNet Farmer"
-      userLabel="Nông dân"
       navItems={FarmerNavItems}
       onLogout={handleLogout}
       userName={user?.name}
