@@ -59,6 +59,7 @@ export function useRecommendedPosts() {
   return useQuery({
     queryKey: postKeys.recommended(),
     queryFn: () => postService.getRecommendedPosts(),
+    enabled: false,
   });
 }
 

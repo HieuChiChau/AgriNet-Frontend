@@ -54,22 +54,17 @@ export function ChatBox() {
 
       const response = await createMessageMutation.mutateAsync(payload);
 
-      // Lưu session_id từ response
       if (response.session_id) {
         setSessionId(response.session_id);
       }
 
-      // Ensure response is a string, handle if it's an object
       let responseText: string;
       if (typeof response.response === "string") {
         responseText = response.response;
       } else if (typeof response.response === "object" && response.response !== null) {
-        // If response is an object, format it nicely
         try {
-          // Check if it's an object with the expected structure
           const obj = response.response as any;
           if (obj.product || obj.region || obj.market_price !== undefined) {
-            // Format as readable text
             responseText = `📊 Thông tin dự báo:\n\n`;
             if (obj.product) responseText += `🌾 Sản phẩm: ${obj.product}\n`;
             if (obj.region) responseText += `📍 Khu vực: ${obj.region}\n`;
@@ -77,7 +72,6 @@ export function ChatBox() {
             if (obj.predicted_price !== undefined) responseText += `🔮 Giá dự báo: ${obj.predicted_price.toLocaleString("vi-VN")} VND\n`;
             if (obj.suggested_price !== undefined) responseText += `💡 Giá đề xuất: ${obj.suggested_price.toLocaleString("vi-VN")} VND\n`;
           } else {
-            // Generic object, stringify it
             responseText = JSON.stringify(response.response, null, 2);
           }
         } catch {
@@ -96,7 +90,6 @@ export function ChatBox() {
 
       setMessages((prev) => [...prev, aiResponse]);
     } catch (error) {
-      // Error đã được xử lý trong mutation hook (toast)
       const errorResponse = {
         id: messages.length + 2,
         text: "Xin lỗi, tôi không thể xử lý câu hỏi của bạn lúc này. Vui lòng thử lại sau.",

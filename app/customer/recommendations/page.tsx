@@ -3,12 +3,55 @@
 import { PostList } from "@/components/molecules/post/post-list";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Icons } from "@/components/icons";
-import { useRecommendedPosts } from "@/hooks/query/posts";
+import { useUser } from "@/hooks/use-user";
+import { useQuery } from "@tanstack/react-query";
+import { forumService } from "@/lib/services";
+import { Post } from "@/types/post";
+import { ForumPost } from "@/types/forum";
+
+function transformForumPostToPost(forumPost: ForumPost): Post {
+  return {
+    id: forumPost.id,
+    title: forumPost.title,
+    description: forumPost.excerpt || forumPost.description,
+    category: forumPost.category as any,
+    price: forumPost.price || 0,
+    quantity: forumPost.quantity || 0,
+    unit: forumPost.unit || "kg",
+    location: forumPost.location || {
+      province: "",
+      district: "",
+      address: "",
+      coordinates: { lat: 0, lng: 0 },
+    },
+    images: forumPost.images || [],
+    status: forumPost.status || ("published" as any),
+    farmer: forumPost.farmer,
+    farmerId: forumPost.farmerId,
+    createdAt: forumPost.createdAt || "",
+    updatedAt: forumPost.updatedAt || "",
+  };
+}
 
 export default function RecommendationsPage() {
-  const { data, isLoading } = useRecommendedPosts();
+  const { user } = useUser();
 
-  const posts = data?.status === "success" ? data.result.data : [];
+  const { data: forumPosts, isLoading } = useQuery({
+    queryKey: ["recommended-posts", user?.latitude, user?.longitude, user?.address],
+    queryFn: () => {
+      if (!user?.latitude || !user?.longitude || !user?.address) {
+        return Promise.resolve([]);
+      }
+      return forumService.getPosts({
+        latitude: parseFloat(user.latitude),
+        longitude: parseFloat(user.longitude),
+        address: user.address,
+      });
+    },
+    enabled: !!user && !!user.latitude && !!user.longitude && !!user.address,
+  });
+
+  const posts: Post[] = forumPosts ? forumPosts.map(transformForumPostToPost) : [];
 
   return (
     <div className="space-y-6 p-6">
