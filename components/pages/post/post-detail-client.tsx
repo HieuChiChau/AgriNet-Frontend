@@ -69,11 +69,21 @@ function transformPostDetailToPost(detail: PostDetailResponse["result"]): Post {
 
 interface PostDetailClientProps {
   postId: string;
+  from?: string;
 }
 
-export function PostDetailClient({ postId }: PostDetailClientProps) {
+export function PostDetailClient({ postId, from }: PostDetailClientProps) {
   const router = useRouter();
   const { data, isLoading, isError } = usePost(postId);
+
+  const getBackUrl = () => {
+    if (from === "forum") {
+      return "/forum";
+    }
+    return null;
+  };
+
+  const backUrl = getBackUrl();
 
   if (isLoading) {
     return (
@@ -110,13 +120,24 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
     <div className="bg-gradient-to-b from-green-50 via-white to-yellow-50">
       <article className="container space-y-8 py-12">
         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-          <Link
-            href="/farmer/posts"
-            className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/90 px-3 py-1 text-green-700 shadow-sm transition hover:border-green-200 hover:text-green-800"
-          >
-            <Icons.chevronLeft className="h-4 w-4" />
-            Quay lại
-          </Link>
+          {backUrl ? (
+            <Link
+              href={backUrl}
+              className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/90 px-3 py-1 text-green-700 shadow-sm transition hover:border-green-200 hover:text-green-800"
+            >
+              <Icons.chevronLeft className="h-4 w-4" />
+              Quay lại
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/90 px-3 py-1 text-green-700 shadow-sm transition hover:border-green-200 hover:text-green-800"
+            >
+              <Icons.chevronLeft className="h-4 w-4" />
+              Quay lại
+            </button>
+          )}
           <span className="hidden text-gray-400 sm:block">/</span>
           <span className="hidden max-w-[260px] truncate text-gray-600 sm:block">
             {post.title}

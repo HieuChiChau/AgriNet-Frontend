@@ -13,8 +13,11 @@ export function useCreatePostMutation() {
   return useMutation({
     mutationFn: (data: CreatePostData) => postService.createPost(data),
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...postKeys.all, "my-posts"],
+        exact: false,
+      });
       queryClient.invalidateQueries({ queryKey: postKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
     },
     onError: (error: any) => {
       toast({

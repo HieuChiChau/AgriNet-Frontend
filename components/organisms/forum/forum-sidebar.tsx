@@ -74,7 +74,7 @@ export function ForumSidebar() {
             {trendingPosts.map((post) => (
               <Link
                 key={post.id}
-                href={`/posts/${post.id}`}
+                href={`/posts/${post.id}?from=forum`}
                 className="flex items-center gap-3 rounded-2xl border border-green-50 bg-white/70 p-3 transition hover:-translate-y-0.5 hover:border-green-200 hover:bg-green-50/80"
               >
                 <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-green-100">

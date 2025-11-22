@@ -10,6 +10,7 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, className }: PostCardProps) {
+  console.log(post)
   return (
     <Link href={`/posts/${post.id}`}>
       <Card className={cn(
@@ -45,10 +46,10 @@ export function PostCard({ post, className }: PostCardProps) {
         </CardContent>
         <CardFooter className="flex items-center gap-2 text-sm border-t border-green-50 pt-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white text-xs font-bold flex-shrink-0">
-            {post.user?.firstName?.charAt(0).toUpperCase()}
+            {post.farmer?.firstName?.charAt(0).toUpperCase()}
           </div>
           <span className="text-gray-600 font-medium truncate">
-            {post.user?.firstName}{" "}{post.user?.lastName}
+            {post.farmer?.firstName}{" "}{post.farmer?.lastName}
           </span>
         </CardFooter>
       </Card>

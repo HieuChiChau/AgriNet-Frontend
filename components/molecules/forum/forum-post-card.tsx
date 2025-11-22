@@ -12,7 +12,7 @@ interface ForumPostCardProps {
 
 export function ForumPostCard({ post }: ForumPostCardProps) {
   return (
-    <Link href={`/posts/${post.id}`}>
+    <Link href={`/posts/${post.id}?from=forum`}>
       <article className="group rounded-2xl border border-green-100 bg-white/80 p-6 shadow-sm backdrop-blur transition hover:-translate-y-1 hover:border-green-300 hover:shadow-lg">
         <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-green-700">
           <Badge variant="secondary" className="bg-green-100">

@@ -45,6 +45,7 @@ export function useMyPosts(params?: { page?: number; limit?: number }) {
   return useQuery({
     queryKey: postKeys.myPosts(params),
     queryFn: () => postService.getMyPosts(params),
+    staleTime: 0,
   });
 }
 
