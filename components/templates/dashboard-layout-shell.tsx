@@ -3,9 +3,18 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/atoms/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/atoms/dropdown-menu";
 import { Icons } from "@/components/icons";
 import { NavLinkItem } from "@/constants/navigation";
 import { useMobileMenu } from "@/hooks/use-mobile-menu";
+import { useUser } from "@/hooks/use-user";
+import { UserRole } from "@/constants/role";
 
 interface DashboardLayoutShellProps {
   title: string;
@@ -19,6 +28,7 @@ interface DashboardLayoutShellProps {
   onLogout: () => void;
   userName?: string | null;
   rootPath: string;
+  userHomePath: string;
 }
 
 const defaultBg = "from-green-50 via-white to-yellow-50";
@@ -37,8 +47,10 @@ export function DashboardLayoutShell({
   onLogout,
   userName,
   rootPath,
+  userHomePath,
 }: DashboardLayoutShellProps) {
   const { isOpen, toggle, close } = useMobileMenu();
+  const { user } = useUser();
   const normalizedPath =
     rootPath && rootPath !== "/" ? rootPath.replace(/\/$/, "") : rootPath;
 
@@ -84,21 +96,6 @@ export function DashboardLayoutShell({
       );
     });
 
-  const userInfoBlock = (
-    <div className="mb-4 flex items-center gap-3 px-3">
-      <div
-        className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br ${userBadgeGradientClass} text-white`}
-      >
-        <Icons.user className="h-5 w-5" />
-      </div>
-      <div className="flex-1">
-        <p className="text-sm font-medium text-gray-900">
-          {userName || subtitle}
-        </p>
-        <p className="text-xs text-green-600 font-medium">{userLabel}</p>
-      </div>
-    </div>
-  );
 
   return (
     <div className={`flex min-h-screen bg-gradient-to-br ${backgroundClass}`}>
@@ -117,20 +114,47 @@ export function DashboardLayoutShell({
           </Link>
         </div>
         <nav className="space-y-1 p-4">{renderNavLinks()}</nav>
-        <div className="mt-auto w-full border-t border-green-100 bg-white p-4">
-          {userInfoBlock}
-          <Button
-            variant="outline"
-            className="w-full border-green-200 text-green-700 hover:bg-green-50"
-            onClick={onLogout}
-          >
-            Đăng xuất
-          </Button>
-        </div>
       </aside>
 
       {/* Content area with mobile navigation */}
       <div className="flex flex-1 flex-col">
+        {/* Desktop Header */}
+        <header className="hidden h-16 items-center justify-between border-b border-green-100 bg-white px-6 shadow-sm md:flex">
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold text-gray-900">{subtitle}</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-full border border-green-200 bg-white px-3 py-2 text-sm font-medium text-green-700 shadow-sm hover:bg-green-50">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-700 font-semibold">
+                      {user.name?.charAt(0).toUpperCase() || user.firstName?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                    {userName || user.name || user.firstName || "Tài khoản"}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link href={userHomePath}>Trang của tôi</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">Chỉnh sửa hồ sơ</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/forum">Diễn đàn</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onLogout}>
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </header>
+
+        {/* Mobile Header */}
         <header className="flex h-16 items-center justify-between border-b border-green-100 bg-white px-4 shadow-sm md:hidden">
           <Link href={rootPath} className="flex items-center space-x-2">
             <div
@@ -159,16 +183,36 @@ export function DashboardLayoutShell({
             <div className="space-y-2">
               {renderNavLinks(() => close())}
             </div>
-            <div className="mt-4 border-t border-green-100 pt-3">
-              {userInfoBlock}
-              <Button
-                variant="outline"
-                className="mt-2 w-full border-green-200 text-green-700 hover:bg-green-50"
-                onClick={onLogout}
-              >
-                Đăng xuất
-              </Button>
-            </div>
+            {user && (
+              <div className="mt-4 border-t border-green-100 pt-3 flex flex-col gap-2">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-green-200 text-green-700"
+                  onClick={close}
+                >
+                  <Link href={userHomePath}>Trang của tôi</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-green-200 text-green-700"
+                  onClick={close}
+                >
+                  <Link href="/profile">Chỉnh sửa hồ sơ</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-green-200 text-green-700"
+                  onClick={() => {
+                    close();
+                    onLogout();
+                  }}
+                >
+                  Đăng xuất
+                </Button>
+              </div>
+            )}
           </div>
         )}
 

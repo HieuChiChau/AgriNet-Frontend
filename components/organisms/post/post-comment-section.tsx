@@ -169,7 +169,6 @@ export function PostCommentSection({ postId }: PostCommentSectionProps) {
         </div>
         <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
 
-        {/* Reply button - chỉ hiển thị cho comment gốc */}
         {canReply && (
           <div className="mt-3">
             {replyingTo === comment.id ? (

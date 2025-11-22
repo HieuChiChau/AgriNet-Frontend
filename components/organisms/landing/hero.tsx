@@ -1,7 +1,16 @@
+"use client";
+
 import Image from "next/image";
 import { AuthCTAButtons } from "@/components/molecules/auth/auth-cta-buttons";
+import { CountUp } from "@/components/molecules/common/count-up";
+import { useInView } from "@/hooks/use-in-view";
 
 export function LandingHero() {
+  const { ref: statsRef, isInView: statsInView } = useInView({
+    threshold: 0.3,
+    triggerOnce: true,
+  });
+
   return (
     <section className="container relative overflow-hidden py-20">
       <div className="absolute inset-0 bg-gradient-to-r from-green-100/40 via-transparent to-yellow-100/60 blur-3xl animate-fade-in" />
@@ -30,13 +39,32 @@ export function LandingHero() {
           <div className="flex justify-center lg:justify-start animate-fade-in-up animate-delay-400">
             <AuthCTAButtons variant="hero" />
           </div>
-          <div className="grid gap-6 rounded-3xl border border-green-100 bg-white/80 p-6 shadow-lg sm:grid-cols-2 animate-scale-in animate-delay-500">
+          <div ref={statsRef} className="grid gap-6 rounded-3xl border border-green-100 bg-white/80 p-6 shadow-lg sm:grid-cols-2 animate-scale-in animate-delay-500">
             <div>
-              <p className="text-3xl font-bold text-green-700">+2,5K</p>
+              <p className="text-3xl font-bold text-green-700">
+                <CountUp
+                  end={2.5}
+                  start={0}
+                  duration={2000}
+                  decimals={1}
+                  prefix="+"
+                  suffix="K"
+                  trigger={statsInView}
+                />
+              </p>
               <p className="text-sm text-gray-500">Tấn nông sản giao dịch thử nghiệm</p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-green-700">30%</p>
+              <p className="text-3xl font-bold text-green-700">
+                <CountUp
+                  end={30}
+                  start={0}
+                  duration={2000}
+                  decimals={0}
+                  suffix="%"
+                  trigger={statsInView}
+                />
+              </p>
               <p className="text-sm text-gray-500">Chi phí logistics giảm trung bình</p>
             </div>
           </div>

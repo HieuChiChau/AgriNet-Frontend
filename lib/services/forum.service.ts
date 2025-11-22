@@ -8,6 +8,13 @@ interface ApiPostItem {
   id: string;
   title: string;
   content: string;
+  status?: number;
+  latitude?: string | null;
+  longitude?: string | null;
+  address?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
   category?: {
     id: string;
     name: string;
@@ -37,8 +44,6 @@ interface ApiPostItem {
     price: string;
     quantity: string;
   } | null;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 function transformApiPostToPost(apiPost: ApiPostItem): Post {
@@ -65,16 +70,16 @@ function transformApiPostToPost(apiPost: ApiPostItem): Post {
       ? "tấn"
       : "kg",
     location: {
-      province: apiPost.user.address
-        ? apiPost.user.address.split(",").slice(-2, -1)[0]?.trim() || ""
+      province: (apiPost.address || apiPost.user.address)
+        ? (apiPost.address || apiPost.user.address).split(",").slice(-2, -1)[0]?.trim() || ""
         : "",
-      district: apiPost.user.address
-        ? apiPost.user.address.split(",").slice(-3, -2)[0]?.trim() || ""
+      district: (apiPost.address || apiPost.user.address)
+        ? (apiPost.address || apiPost.user.address).split(",").slice(-3, -2)[0]?.trim() || ""
         : "",
-      address: apiPost.user.address || "",
+      address: apiPost.address || apiPost.user.address || "",
       coordinates: {
-        lat: parseFloat(apiPost.user.latitude) || 0,
-        lng: parseFloat(apiPost.user.longitude) || 0,
+        lat: parseFloat(apiPost.latitude || apiPost.user.latitude) || 0,
+        lng: parseFloat(apiPost.longitude || apiPost.user.longitude) || 0,
       },
     },
     images: apiPost.images.map((img) => img.url),

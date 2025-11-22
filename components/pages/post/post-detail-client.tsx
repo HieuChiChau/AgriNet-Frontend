@@ -127,19 +127,29 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
   const getTimeAgo = (dateString?: string) => {
     if (!dateString || dateString.trim() === "") return "";
     try {
+      // Parse ISO 8601 date string (ví dụ: "2025-11-22T17:45:22.939Z")
       const date = new Date(dateString);
       const now = new Date();
 
+      // Kiểm tra date có hợp lệ không
       if (isNaN(date.getTime())) {
         return "";
       }
 
+      // Tính toán chênh lệch thời gian (milliseconds)
       const diffInMs = now.getTime() - date.getTime();
+
+      // Nếu date trong tương lai (có thể do lỗi), trả về empty
+      if (diffInMs < 0) {
+        return "";
+      }
+
+      const diffInSeconds = Math.floor(diffInMs / 1000);
       const diffInMinutes = Math.floor(diffInMs / 60000);
       const diffInHours = Math.floor(diffInMs / 3600000);
       const diffInDays = Math.floor(diffInMs / 86400000);
 
-      if (diffInMinutes < 1) {
+      if (diffInSeconds < 60) {
         return "Vừa xong";
       }
       if (diffInMinutes < 60) {
@@ -152,6 +162,7 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
         return `${diffInDays} ngày trước`;
       }
 
+      // Với thời gian dài hơn, dùng formatDistanceToNow
       const result = formatDistanceToNow(date, { addSuffix: false, locale: vi });
       return `${result} trước`;
     } catch {

@@ -29,6 +29,7 @@ export default function CustomerLayout({
       onLogout={handleLogout}
       userName={user?.name}
       rootPath={pathname || "/customer"}
+      userHomePath="/customer"
       userBadgeGradientClass="from-yellow-400 to-yellow-500"
     >
       {children}

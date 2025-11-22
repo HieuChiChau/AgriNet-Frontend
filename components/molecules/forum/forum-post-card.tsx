@@ -12,22 +12,37 @@ interface ForumPostCardProps {
   post: ForumPost;
 }
 
-function getTimeAgo(dateString?: string) {
-  if (!dateString || dateString.trim() === "") return "";
+function getTimeAgo(dateString?: string | null) {
+  // Kiểm tra dateString có tồn tại và không rỗng
+  if (!dateString || (typeof dateString === "string" && dateString.trim() === "")) {
+    return "";
+  }
+
   try {
-    const date = new Date(dateString);
+    // Parse ISO 8601 date string (ví dụ: "2025-11-22T17:45:22.939Z")
+    const trimmedDate = String(dateString).trim();
+    const date = new Date(trimmedDate);
     const now = new Date();
 
+    // Kiểm tra date có hợp lệ không
     if (isNaN(date.getTime())) {
       return "";
     }
 
+    // Tính toán chênh lệch thời gian (milliseconds)
     const diffInMs = now.getTime() - date.getTime();
+
+    // Nếu date trong tương lai (có thể do lỗi), trả về empty
+    if (diffInMs < 0) {
+      return "";
+    }
+
+    const diffInSeconds = Math.floor(diffInMs / 1000);
     const diffInMinutes = Math.floor(diffInMs / 60000);
     const diffInHours = Math.floor(diffInMs / 3600000);
     const diffInDays = Math.floor(diffInMs / 86400000);
 
-    if (diffInMinutes < 1) {
+    if (diffInSeconds < 60) {
       return "Vừa xong";
     }
     if (diffInMinutes < 60) {
@@ -40,15 +55,17 @@ function getTimeAgo(dateString?: string) {
       return `${diffInDays} ngày trước`;
     }
 
+    // Với thời gian dài hơn, dùng formatDistanceToNow
     const result = formatDistanceToNow(date, { addSuffix: false, locale: vi });
     return `${result} trước`;
-  } catch {
+  } catch (error) {
     return "";
   }
 }
 
 export function ForumPostCard({ post }: ForumPostCardProps) {
-  const timeAgo = getTimeAgo(post.createdAt);
+  // Ưu tiên createdAt, nếu không có thì dùng updatedAt
+  const timeAgo = getTimeAgo(post.createdAt || post.updatedAt);
 
   return (
     <Link href={`/posts/${post.id}?from=forum`}>

@@ -29,6 +29,7 @@ export default function FarmerLayout({
       onLogout={handleLogout}
       userName={user?.name}
       rootPath={pathname || "/farmer"}
+      userHomePath="/farmer"
     >
       {children}
     </DashboardLayoutShell>

@@ -1,14 +1,23 @@
+"use client";
+
 import Image from "next/image";
+import { CountUp } from "@/components/molecules/common/count-up";
+import { useInView } from "@/hooks/use-in-view";
 
 const statItems = [
-  { label: "Giảm chi phí vận chuyển", value: "30%", detail: "Khi ghép đơn & tối ưu tuyến" },
-  { label: "Độ chính xác dự báo", value: "92%", detail: "Dựa trên dữ liệu thị trường & thời tiết" },
-  { label: "Kết nối trực tiếp", value: "100%", detail: "Nông dân - thương lái - logistics" },
+  { label: "Giảm chi phí vận chuyển", value: 30, suffix: "%", detail: "Khi ghép đơn & tối ưu tuyến" },
+  { label: "Độ chính xác dự báo", value: 92, suffix: "%", detail: "Dựa trên dữ liệu thị trường & thời tiết" },
+  { label: "Kết nối trực tiếp", value: 100, suffix: "%", detail: "Nông dân - thương lái - logistics" },
 ];
 
 export function LandingStats() {
+  const { ref, isInView } = useInView({
+    threshold: 0.3,
+    triggerOnce: true,
+  });
+
   return (
-    <section className="overflow-hidden border-t border-green-100 bg-gradient-to-br from-green-50 to-yellow-50 py-20">
+    <section ref={ref} className="overflow-hidden border-t border-green-100 bg-gradient-to-br from-green-50 to-yellow-50 py-20">
       <div className="container grid gap-12 lg:grid-cols-[1fr,0.9fr]">
         <div className="space-y-6 animate-fade-in-up animate-delay-100">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-green-600">Số liệu thực nghiệm</p>
@@ -25,7 +34,16 @@ export function LandingStats() {
                   opacity: 0,
                 }}
               >
-                <div className="text-4xl font-bold text-green-600">{item.value}</div>
+                <div className="text-4xl font-bold text-green-600">
+                  <CountUp
+                    end={item.value}
+                    start={0}
+                    duration={2000}
+                    decimals={0}
+                    suffix={item.suffix}
+                    trigger={isInView}
+                  />
+                </div>
                 <p className="mt-1 text-sm font-medium text-gray-900">{item.label}</p>
                 <p className="text-sm text-gray-500">{item.detail}</p>
               </div>

@@ -30,6 +30,7 @@ const AdminLayout = ({ children }: { children: ReactNode }) => {
         onLogout={handleLogout}
         userName={user?.name || "Admin"}
         rootPath={pathname || "/manage/dashboard"}
+        userHomePath="/manage/dashboard"
       >
         {children}
       </DashboardLayoutShell>

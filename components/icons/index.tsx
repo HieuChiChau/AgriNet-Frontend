@@ -53,7 +53,9 @@ import {
   Phone,
   BarChart3,
   Clock,
-  Tag
+  Tag,
+  Bot,
+  Sparkles
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -115,6 +117,8 @@ export const Icons = {
   clock: Clock,
   tag: Tag,
   image: Image,
+  bot: Bot,
+  sparkles: Sparkles,
 
   gitHub: ({ ...props }: LucideProps) => (
     <svg
