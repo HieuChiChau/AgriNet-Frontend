@@ -15,6 +15,7 @@ import { PostCommentSection } from "@/components/organisms/post/post-comment-sec
 
 function transformPostDetailToPost(detail: PostDetailResponse["result"]): Post {
   return {
+
     id: detail.id,
     title: detail.title,
     description: detail.content,
@@ -148,7 +149,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
         </Card>
 
         {/* Comment Section */}
-        <PostCommentSection />
+        <PostCommentSection postId={postId} />
       </article>
     </div>
   );

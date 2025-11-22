@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Card, CardContent } from "@/components/atoms/card";
@@ -9,6 +9,12 @@ import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Pagination } from "@/components/molecules/common/pagination";
+import { useCreateCommentMutation } from "@/hooks/mutations/comments";
+import { useComments } from "@/hooks/query/comments";
+import { useUser } from "@/hooks/use-user";
+import { authService } from "@/lib/services";
+import type { CommentItem } from "@/lib/services/comment.service";
+import { Loader2 } from "lucide-react";
 
 interface Comment {
   id: string;
@@ -22,156 +28,248 @@ interface Comment {
   replies?: Comment[];
 }
 
-const generateMockComments = (): Comment[] => {
-  const comments: Comment[] = [];
-  const names = [
-    "Nguyễn Văn A", "Trần Thị B", "Lê Văn C", "Phạm Thị D", "Hoàng Văn E",
-    "Ngô Thị F", "Đỗ Văn G", "Bùi Thị H", "Vũ Văn I", "Đặng Thị K",
-    "Lý Văn L", "Võ Thị M", "Trương Văn N", "Phan Thị O", "Lương Văn P",
-  ];
-  const locations = ["Hà Nội", "TP.HCM", "Đà Nẵng", "Cần Thơ", "Hải Phòng"];
-  const contents = [
-    "Sản phẩm này chất lượng tốt, tôi đã mua và rất hài lòng!",
-    "Giá cả hợp lý, có thể thương lượng thêm không?",
-    "Bạn có thể giao hàng đến địa chỉ của tôi không?",
-    "Sản phẩm có đảm bảo chất lượng không?",
-    "Tôi muốn mua số lượng lớn, có giảm giá không?",
-    "Thời gian giao hàng bao lâu?",
-    "Sản phẩm này có nguồn gốc rõ ràng không?",
-    "Cảm ơn bạn đã chia sẻ thông tin!",
-    "Tôi rất quan tâm đến sản phẩm này.",
-    "Có thể xem mẫu trước khi mua không?",
-  ];
+const COMMENTS_PER_PAGE = 10;
 
-  for (let i = 1; i <= 25; i++) {
-    const hasReply = i % 3 === 0;
-    comments.push({
-      id: `${i}`,
-      author: {
-        name: names[i % names.length],
-        location: locations[i % locations.length],
-      },
-      content: contents[i % contents.length],
-      createdAt: new Date(Date.now() - i * 2 * 60 * 60 * 1000).toISOString(),
-      ...(hasReply && {
-        replies: [
-          {
-            id: `${i}-1`,
-            author: {
-              name: names[(i + 1) % names.length],
-              location: locations[(i + 1) % locations.length],
-            },
-            content: "Cảm ơn bạn đã phản hồi!",
-            createdAt: new Date(Date.now() - i * 2 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(),
-          },
-        ],
-      }),
-    });
-  }
+interface PostCommentSectionProps {
+  postId: string;
+}
 
-  return comments;
-};
+function transformCommentItem(item: CommentItem): Comment {
+  const transformedUser = authService.transformUser(item.user);
+  const location = item.user.address
+    ? item.user.address.split(",").slice(-2, -1)[0]?.trim() || ""
+    : undefined;
 
-const mockComments: Comment[] = generateMockComments();
+  return {
+    id: item.id,
+    author: {
+      name: transformedUser.name,
+      avatar: transformedUser.avatar || undefined,
+      location,
+    },
+    content: item.content,
+    createdAt: item.createdAt,
+    replies:
+      item.childComments && item.childComments.length > 0
+        ? item.childComments.map(transformCommentItem)
+        : undefined,
+  };
+}
 
-const COMMENTS_PER_PAGE = 5;
-
-export function PostCommentSection() {
-  const [allComments] = useState<Comment[]>(mockComments);
+export function PostCommentSection({ postId }: PostCommentSectionProps) {
+  const { user } = useUser();
   const [currentPage, setCurrentPage] = useState(1);
   const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const createCommentMutation = useCreateCommentMutation();
 
-  const totalPages = Math.ceil(allComments.length / COMMENTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * COMMENTS_PER_PAGE;
-  const endIndex = startIndex + COMMENTS_PER_PAGE;
-  const displayedComments = useMemo(
-    () => allComments.slice(startIndex, endIndex),
-    [allComments, startIndex, endIndex]
-  );
+  const {
+    data: commentsData,
+    isLoading,
+    isError,
+    refetch,
+  } = useComments({
+    postId,
+    page: currentPage,
+    limit: COMMENTS_PER_PAGE,
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const comments = commentsData?.result?.items || [];
+  const totalComments = commentsData?.result?.total || 0;
+  const totalPages = commentsData?.result?.totalPage || 1;
+  const displayedComments = comments.map(transformCommentItem);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    setNewComment("");
+
+    try {
+      await createCommentMutation.mutateAsync({
+        postId,
+        content: newComment.trim(),
+      });
+
+      setNewComment("");
+      refetch();
+    } catch (error) {
+    }
   };
 
-  const renderComment = (comment: Comment, depth = 0) => (
-    <div
-      key={comment.id}
-      className={cn(
-        "rounded-2xl border border-green-100 bg-white/80 p-4 shadow-sm",
-        depth > 0 && "ml-8 mt-3"
-      )}
-    >
-      <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white font-semibold text-sm">
-          {comment.author.name.charAt(0).toUpperCase()}
+  const handleReplySubmit = async (parentCommentId: string, e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyContent.trim()) return;
+
+    try {
+      await createCommentMutation.mutateAsync({
+        postId,
+        parentCommentId,
+        content: replyContent.trim(),
+      });
+
+      setReplyContent("");
+      setReplyingTo(null);
+      refetch();
+    } catch (error) {
+    }
+  };
+
+  const renderComment = (comment: Comment, depth = 0) => {
+    const isReply = depth > 0;
+    const canReply = depth === 0;
+    return (
+      <div
+        key={comment.id}
+        className={cn(
+          "rounded-2xl border border-green-100 bg-white/80 p-4 shadow-sm",
+          isReply && "ml-8 mt-3"
+        )}
+      >
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white font-semibold text-sm">
+            {comment.author.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-900">
+              {comment.author.name}
+            </p>
+            <p className="text-xs text-gray-500">
+              {comment.author.location && `${comment.author.location} · `}
+              {formatDistanceToNow(new Date(comment.createdAt), {
+                addSuffix: true,
+                locale: vi,
+              })}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-900">
-            {comment.author.name}
-          </p>
-          <p className="text-xs text-gray-500">
-            {comment.author.location && `${comment.author.location} · `}
-            {formatDistanceToNow(new Date(comment.createdAt), {
-              addSuffix: true,
-              locale: vi,
-            })}
-          </p>
-        </div>
+        <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
+
+        {/* Reply button - chỉ hiển thị cho comment gốc */}
+        {canReply && (
+          <div className="mt-3">
+            {replyingTo === comment.id ? (
+              <form
+                onSubmit={(e) => handleReplySubmit(comment.id, e)}
+                className="mt-3 space-y-2"
+              >
+                <Input
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  placeholder="Viết phản hồi..."
+                  className="border-green-200 focus:border-green-400"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!replyContent.trim() || createCommentMutation.isPending}
+                    className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+                  >
+                    Gửi
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setReplyingTo(null);
+                      setReplyContent("");
+                    }}
+                    className="border-green-200 text-green-700 hover:bg-green-50"
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setReplyingTo(comment.id)}
+                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+              >
+                <Icons.comment className="h-3.5 w-3.5 mr-1" />
+                Trả lời
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Replies */}
+        {comment.replies && comment.replies.length > 0 && (
+          <div className="mt-4 space-y-3 border-t border-green-50 pt-3">
+            {comment.replies.map((reply) => renderComment(reply, depth + 1))}
+          </div>
+        )}
       </div>
-      <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
-      {comment.replies && comment.replies.length > 0 && (
-        <div className="mt-4 space-y-3 border-t border-green-50 pt-3">
-          {comment.replies.map((reply) => renderComment(reply, depth + 1))}
-        </div>
-      )}
-    </div>
-  );
+    );
+  };
 
   return (
     <Card className="border-green-100 shadow-lg">
       <CardContent className="p-6 space-y-6">
         <div className="flex items-center gap-2 text-lg font-semibold text-green-700">
           <Icons.comment className="h-5 w-5" />
-          Bình luận ({allComments.length})
+          Bình luận ({totalComments})
         </div>
 
         {/* Comment form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="flex gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white font-semibold text-sm flex-shrink-0">
-              U
+        {user ? (
+          <form onSubmit={handleSubmit} className="space-y-3">
+            <div className="flex gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white font-semibold text-sm flex-shrink-0">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1">
+                <Input
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Viết bình luận..."
+                  className="border-green-200 focus:border-green-400"
+                  disabled={createCommentMutation.isPending}
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={!newComment.trim() || createCommentMutation.isPending}
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
+              >
+                {createCommentMutation.isPending ? "Đang gửi..." : "Gửi"}
+              </Button>
             </div>
-            <div className="flex-1">
-              <Input
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Viết bình luận..."
-                className="border-green-200 focus:border-green-400"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={!newComment.trim()}
-              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700"
-            >
-              Gửi
-            </Button>
+          </form>
+        ) : (
+          <div className="rounded-lg border border-green-200 bg-green-50/50 p-4 text-center text-sm text-gray-600">
+            Vui lòng{" "}
+            <a href="/login" className="text-green-600 hover:text-green-700 font-semibold">
+              đăng nhập
+            </a>{" "}
+            để bình luận
           </div>
-        </form>
+        )}
 
         {/* Comments list */}
-        <div className="space-y-4">
-          {displayedComments.length > 0 ? (
-            displayedComments.map((comment) => renderComment(comment))
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Icons.comment className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-sm">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
-            </div>
-          )}
-        </div>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-green-600 mb-3" />
+            <p className="text-sm text-gray-500">Đang tải bình luận...</p>
+          </div>
+        ) : isError ? (
+          <div className="text-center py-8 text-gray-500">
+            <Icons.comment className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm">Không thể tải bình luận. Vui lòng thử lại sau.</p>
+          </div>
+        ) : displayedComments.length > 0 ? (
+          <div className="space-y-4">
+            {displayedComments.map((comment) => renderComment(comment))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <Icons.comment className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+          </div>
+        )}
 
         {/* Pagination */}
         {totalPages > 1 && (
@@ -186,4 +284,3 @@ export function PostCommentSection() {
     </Card>
   );
 }
-
