@@ -31,7 +31,7 @@ export function PostCard({ post, className }: PostCardProps) {
           <CardTitle className=" text-green-700 group-hover:text-green-600 transition-colors">
             {post.title}
           </CardTitle>
-          <CardDescription className="line-clamp-3 text-sm">
+          <CardDescription className="line-clamp-3 text-sm min-h-[3.75rem]">
             {post.description}
           </CardDescription>
         </CardHeader>

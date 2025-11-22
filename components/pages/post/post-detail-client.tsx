@@ -125,10 +125,35 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
   const postAddress = detail.address || detail.user.address || "";
 
   const getTimeAgo = (dateString?: string) => {
-    if (!dateString) return "";
+    if (!dateString || dateString.trim() === "") return "";
     try {
       const date = new Date(dateString);
-      return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+      const now = new Date();
+
+      if (isNaN(date.getTime())) {
+        return "";
+      }
+
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInMinutes = Math.floor(diffInMs / 60000);
+      const diffInHours = Math.floor(diffInMs / 3600000);
+      const diffInDays = Math.floor(diffInMs / 86400000);
+
+      if (diffInMinutes < 1) {
+        return "Vừa xong";
+      }
+      if (diffInMinutes < 60) {
+        return `${diffInMinutes} phút trước`;
+      }
+      if (diffInHours < 24) {
+        return `${diffInHours} giờ trước`;
+      }
+      if (diffInDays < 7) {
+        return `${diffInDays} ngày trước`;
+      }
+
+      const result = formatDistanceToNow(date, { addSuffix: false, locale: vi });
+      return `${result} trước`;
     } catch {
       return "";
     }

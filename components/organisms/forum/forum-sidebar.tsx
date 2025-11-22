@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Icons } from "@/components/icons";
 import { useForumPosts } from "@/hooks/query/forum";
 import { Skeleton } from "@/components/atoms/skeleton";
+import { MessageCircle } from "lucide-react";
 
 export function ForumSidebar() {
   const { data: posts = [], isLoading } = useForumPosts();
@@ -60,38 +61,74 @@ export function ForumSidebar() {
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-sm font-semibold uppercase text-green-700">
-          Bài nổi bật
-        </h3>
+        <div className="flex items-center gap-2">
+          <div className="h-1 w-8 rounded-full bg-gradient-to-r from-green-500 to-green-600"></div>
+          <h3 className="text-sm font-semibold uppercase text-green-700">
+            Bài nổi bật
+          </h3>
+        </div>
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, idx) => (
-              <Skeleton key={idx} className="h-20 rounded-2xl bg-white/70" />
+              <div key={idx} className="rounded-2xl border border-green-50 bg-white/70 p-3">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-16 w-16 rounded-xl" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-3/4" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
           <div className="space-y-3">
-            {trendingPosts.map((post) => (
+            {trendingPosts.map((post, index) => (
               <Link
                 key={post.id}
                 href={`/posts/${post.id}?from=forum`}
-                className="flex items-center gap-3 rounded-2xl border border-green-50 bg-white/70 p-3 transition hover:-translate-y-0.5 hover:border-green-200 hover:bg-green-50/80"
+                className="group relative flex items-start gap-3 rounded-2xl border border-green-50 bg-gradient-to-br from-white/90 to-green-50/30 p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-green-200 hover:shadow-md"
               >
-                <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-green-100">
-                  <Image
-                    src={post.images?.[0] || "/assets/images/forum-hero-bg.svg"}
-                    alt={post.title}
-                    fill
-                    className="object-cover"
-                  />
+                {/* Number badge */}
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-xs font-bold text-white shadow-sm">
+                  {index + 1}
                 </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-gray-900 line-clamp-1">
+
+                {/* Image */}
+                <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-green-100 bg-green-50 shadow-sm">
+                  {post.images?.[0] ? (
+                    <Image
+                      src={post.images[0]}
+                      alt={post.title}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Icons.media className="h-6 w-6 text-green-400" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <p className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-green-700 transition-colors">
                     {post.title}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    {post.excerpt}
-                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    {post.location.district && (
+                      <span className="flex items-center gap-1">
+                        <Icons.locations className="h-3 w-3" />
+                        {post.location.district}
+                      </span>
+                    )}
+                    {post.commentsCount > 0 && (
+                      <span className="flex items-center gap-1">
+                        <MessageCircle className="h-3 w-3" />
+                        {post.commentsCount}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}
