@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/hooks/use-user";
-import { PostList } from "@/components/molecules/post-list";
+import { PostList } from "@/components/molecules/post/post-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Icons } from "@/components/icons";
 import Link from "next/link";

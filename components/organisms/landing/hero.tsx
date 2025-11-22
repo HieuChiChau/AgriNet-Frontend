@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { AuthCTAButtons } from "@/components/molecules/auth-cta-buttons";
+import { AuthCTAButtons } from "@/components/molecules/auth/auth-cta-buttons";
 
 export function LandingHero() {
   return (

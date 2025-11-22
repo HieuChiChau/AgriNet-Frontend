@@ -1,5 +1,5 @@
 import { Post } from "@/types/post";
-import { PostCard } from "./post-card";
+import { PostCard } from "@/components/molecules/post/post-card";
 import { Skeleton } from "@/components/atoms/skeleton";
 
 interface PostListProps {

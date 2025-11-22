@@ -10,7 +10,6 @@ export function useTablePagination(initialPageCount: number) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Get search params with fallback values
   const pageIndex = Math.max(
     0,
     Number(searchParams?.get("page") ?? START_PAGE) - 1
@@ -50,7 +49,6 @@ export function useTablePagination(initialPageCount: number) {
     [createQueryString, pathname, router]
   );
 
-  // Update URL when pagination changes
   useEffect(() => {
     updateUrl({
       page: pagination.pageIndex + 1,
@@ -58,7 +56,6 @@ export function useTablePagination(initialPageCount: number) {
     });
   }, [pagination, updateUrl]);
 
-  // Update URL when search changes
   useEffect(() => {
     updateUrl({
       page: 1,
@@ -67,7 +64,6 @@ export function useTablePagination(initialPageCount: number) {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [localSearchValue, updateUrl]);
 
-  // Sync with URL params
   useEffect(() => {
     setPagination({
       pageIndex: Math.max(

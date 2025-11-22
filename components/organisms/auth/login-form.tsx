@@ -58,11 +58,13 @@ export function LoginForm() {
 
       setAuthorization(response.result.accessToken);
 
+      // User đã được set trong mutation onSuccess, nhưng cần transform để redirect
       const user = authService.transformUser(response.result.profile);
 
       router.push(resolveRedirect(user.role));
       router.refresh();
     } catch (error: any) {
+      // Error đã được handle trong mutation
     } finally {
       setIsSubmitting(false);
     }

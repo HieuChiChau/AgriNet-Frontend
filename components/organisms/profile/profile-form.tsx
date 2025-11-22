@@ -32,7 +32,7 @@ import {
 import { User } from "@/types/user";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/constants/role";
-import { GoogleMapsAutocomplete } from "@/components/molecules/google-maps-autocomplete";
+import { GoogleMapsAutocomplete } from "@/components/molecules/common/google-maps-autocomplete";
 
 interface ProfileFormProps {
   user: User;

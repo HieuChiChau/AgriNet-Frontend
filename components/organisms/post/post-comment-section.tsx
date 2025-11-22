@@ -8,7 +8,7 @@ import { Icons } from "@/components/icons";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { Pagination } from "@/components/molecules/pagination";
+import { Pagination } from "@/components/molecules/common/pagination";
 
 interface Comment {
   id: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { PostList } from "@/components/molecules/post-list";
+import { PostList } from "@/components/molecules/post/post-list";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Icons } from "@/components/icons";
 import { useRecommendedPosts } from "@/hooks/query/posts";

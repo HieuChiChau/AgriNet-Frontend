@@ -1,6 +1,8 @@
 import { faker } from "@faker-js/faker";
 import * as fs from "fs";
 
+// ========== 1. ENUM & CONSTANTS ==========
+
 export enum UserRole {
   SUPER_ADMIN = 1,
   CUSTOMER = 2,
@@ -14,6 +16,8 @@ const CATEGORIES = [
 ] as const;
 
 type CategoryName = (typeof CATEGORIES)[number]["name"];
+
+// ========== 2. TYPES (theo schema bạn đưa) ==========
 
 interface Farmer {
   email: string;
@@ -49,6 +53,8 @@ interface Post {
   price?: string;
   quantity?: string;
 }
+
+// ========== 3. DATASET VIỆT NAM ==========
 
 const VI_LAST_NAMES = [
   "Nguyễn",
@@ -119,6 +125,7 @@ const VI_STREET_NAMES = [
   "Quang Trung",
 ];
 
+// Một số cụm địa điểm trên khắp Việt Nam để random lat/long & địa chỉ
 const VN_BASE_LOCATIONS = [
   {
     province: "Hà Nội",
@@ -234,6 +241,7 @@ const VN_BASE_LOCATIONS = [
   },
 ];
 
+// Nông sản theo category
 const VEGETABLE_ITEMS = [
   "rau cải xanh",
   "rau muống",
@@ -272,6 +280,9 @@ const INDUSTRIAL_ITEMS = [
   "cọ dầu",
 ];
 
+// ========== 4. HELPERS CHUẨN HÓA ==========
+
+// Bỏ dấu để tạo email
 function removeVietnameseTones(str: string): string {
   return str
     .normalize("NFD")
@@ -280,6 +291,7 @@ function removeVietnameseTones(str: string): string {
     .replace(/Đ/g, "D");
 }
 
+// Tên Việt
 function makeVietnameseFullName(): { firstName: string; lastName: string } {
   const gender = faker.helpers.arrayElement<"male" | "female">([
     "male",
@@ -292,10 +304,11 @@ function makeVietnameseFullName(): { firstName: string; lastName: string } {
       ? faker.helpers.arrayElement(VI_FIRST_NAMES_MALE)
       : faker.helpers.arrayElement(VI_FIRST_NAMES_FEMALE);
 
-  const firstName = `${midName} ${firstNameCore}`;
+  const firstName = `${midName} ${firstNameCore}`; // Ví dụ: "Văn Huy", "Thị Thảo"
   return { firstName, lastName };
 }
 
+// Email sạch
 function makeEmailFromName(firstName: string, lastName: string): string {
   const full = `${lastName} ${firstName}`;
   const noTone = removeVietnameseTones(full)
@@ -308,6 +321,7 @@ function makeEmailFromName(firstName: string, lastName: string): string {
   return `${noTone}${num}@example.com`;
 }
 
+// SĐT Việt Nam
 function makeVietnamPhone(): string {
   const prefixes = ["03", "05", "07", "08", "09"];
   const prefix = faker.helpers.arrayElement(prefixes);
@@ -315,6 +329,7 @@ function makeVietnamPhone(): string {
   return `${prefix}${rest}`;
 }
 
+// Địa chỉ + lat/long trong VN
 function randomVNLocation() {
   const base = faker.helpers.arrayElement(VN_BASE_LOCATIONS);
   const latOffset = faker.number.float({
@@ -339,6 +354,8 @@ function randomVNLocation() {
 
   return { address, latitude, longitude, province: base.province };
 }
+
+// ========== 5. FACTORY: FARMERS & CUSTOMERS ==========
 
 function createFarmer(): Farmer {
   const { firstName, lastName } = makeVietnameseFullName();
@@ -375,6 +392,8 @@ function createCustomer(): Customer {
     status: 1,
   };
 }
+
+// ========== 6. FACTORY: POSTS (kèm productName, price, quantity) ==========
 
 function pickProductName(categoryName: CategoryName): string {
   if (categoryName === "Rau củ") {
@@ -476,6 +495,8 @@ function createPost(customers: Customer[]): Post {
     quantity: quantityString,
   };
 }
+
+// ========== 7. MAIN GENERATOR ==========
 
 function main() {
   const farmerCount = 100;

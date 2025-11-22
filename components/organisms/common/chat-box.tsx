@@ -31,7 +31,6 @@ export function ChatBox() {
     setMessages([...messages, newMessage]);
     setInputValue("");
 
-    // Simulate bot response
     setTimeout(() => {
       const botResponse = {
         id: messages.length + 2,

@@ -1,7 +1,7 @@
 "use client";
 
-import { ForumPostFeed } from "@/components/organisms/forum-post-feed";
-import { ForumSidebar } from "@/components/organisms/forum-sidebar";
+import { ForumPostFeed } from "@/components/organisms/forum/forum-post-feed";
+import { ForumSidebar } from "@/components/organisms/forum/forum-sidebar";
 
 export function ForumPageClient() {
   return (

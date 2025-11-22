@@ -6,9 +6,9 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/atoms/toaster";
 import AuthWrapper from "@/components/pages/AuthWrapper";
 import ReactQueryProvider from "@/components/providers/use-query";
-import { SiteHeader } from "@/components/organisms/site-header";
-import { SiteFooter } from "@/components/organisms/site-footer";
-import { ChatBox } from "@/components/organisms/chat-box";
+import { SiteHeader } from "@/components/organisms/common/site-header";
+import { SiteFooter } from "@/components/organisms/common/site-footer";
+import { ChatBox } from "@/components/organisms/common/chat-box";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],

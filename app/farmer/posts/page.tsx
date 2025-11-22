@@ -2,7 +2,7 @@
 
 import type { MyPost } from "@/lib/services/post.service";
 import { Post } from "@/types/post";
-import { PostList } from "@/components/molecules/post-list";
+import { PostList } from "@/components/molecules/post/post-list";
 import { ProductCategory, PostStatus } from "@/types/post";
 import { authService } from "@/lib/services";
 import { useMyPosts } from "@/hooks/query/posts";

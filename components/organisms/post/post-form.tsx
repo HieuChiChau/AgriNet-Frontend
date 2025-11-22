@@ -19,7 +19,7 @@ import { Textarea } from "@/components/atoms/textarea";
 import { Button } from "@/components/atoms/button";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
-import { GoogleMapsAutocomplete } from "@/components/molecules/google-maps-autocomplete";
+import { GoogleMapsAutocomplete } from "@/components/molecules/common/google-maps-autocomplete";
 
 interface PostFormProps {
   onSubmit: (data: CreatePostFormData & {
@@ -33,11 +33,11 @@ interface PostFormProps {
 }
 
 const MAX_IMAGES = 5;
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 
 interface ImageWithFile {
-  dataUrl: string; // For preview
-  file: File; // For upload
+  dataUrl: string;
+  file: File;
 }
 
 export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFormProps) {

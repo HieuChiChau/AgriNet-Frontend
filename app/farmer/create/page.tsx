@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { PostForm } from "@/components/organisms/post-form";
+import { PostForm } from "@/components/organisms/post/post-form";
 import { CreatePostFormData } from "@/lib/validations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { useUser } from "@/hooks/use-user";

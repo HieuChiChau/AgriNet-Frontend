@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Icons } from "@/components/icons";
 import Link from "next/link";
 import { ForumPostGallery } from "@/components/molecules/forum/post-gallery";
-import { PostCommentSection } from "@/components/organisms/post-comment-section";
+import { PostCommentSection } from "@/components/organisms/post/post-comment-section";
 
 function transformPostDetailToPost(detail: PostDetailResponse["result"]): Post {
   return {

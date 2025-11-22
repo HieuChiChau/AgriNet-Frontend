@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ForumPost, ForumComment } from "@/types/forum";
 import { ForumPostHero } from "@/components/organisms/forum/post-hero";
 import { ForumPostSidebar } from "@/components/organisms/forum/post-sidebar";
-import { ForumCommentThread } from "@/components/organisms/forum-comment-thread";
+import { ForumCommentThread } from "@/components/organisms/forum/forum-comment-thread";
 import { Icons } from "@/components/icons";
 
 interface ForumPostDetailTemplateProps {

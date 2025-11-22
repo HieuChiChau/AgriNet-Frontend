@@ -52,14 +52,11 @@ export function GoogleMapsAutocomplete({
       return false;
     }
 
-    // Xóa autocomplete cũ nếu có
     if (autocompleteRef.current) {
       try {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
         autocompleteRef.current = null;
-      } catch (e) {
-        // Ignore error
-      }
+      } catch (e) { }
     }
 
     try {
@@ -74,7 +71,6 @@ export function GoogleMapsAutocomplete({
 
       autocompleteRef.current = autocomplete;
 
-      // Attach listener ngay lập tức, không delay
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
 
@@ -88,7 +84,6 @@ export function GoogleMapsAutocomplete({
           let lat: number;
           let lng: number;
 
-          // Xử lý cả LatLng object và LatLngLiteral
           if (typeof location.lat === "function") {
             lat = location.lat();
             lng = location.lng();
@@ -99,7 +94,6 @@ export function GoogleMapsAutocomplete({
 
           const address = place.formatted_address || place.name || inputRef.current?.value || "";
 
-          // Convert sang string với đủ số thập phân (8 chữ số sau dấu phẩy)
           const latStr = lat.toFixed(8);
           const lngStr = lng.toFixed(8);
 
@@ -125,30 +119,25 @@ export function GoogleMapsAutocomplete({
     let cleanupCallback: (() => void) | null = null;
 
     const loadGoogleMaps = () => {
-      // Nếu Google Maps đã sẵn sàng, khởi tạo ngay (không delay)
       if (window.google && window.google.maps && window.google.maps.places) {
-        // Sử dụng requestAnimationFrame để đảm bảo DOM đã render xong
         requestAnimationFrame(() => {
           initializeAutocomplete();
         });
         return;
       }
 
-      // Kiểm tra xem script đã được load chưa
       const existingScript = document.querySelector(
         'script[src*="maps.googleapis.com/maps/api/js"]'
       );
 
       if (existingScript) {
-        // Script đã tồn tại, đợi nó load xong
         let attempts = 0;
-        const maxAttempts = 50; // 5 giây max
+        const maxAttempts = 50;
 
         checkInterval = setInterval(() => {
           attempts++;
           if (window.google?.maps?.places) {
             if (checkInterval) clearInterval(checkInterval);
-            // Khởi tạo ngay khi API sẵn sàng
             requestAnimationFrame(() => {
               initializeAutocomplete();
             });
@@ -156,12 +145,11 @@ export function GoogleMapsAutocomplete({
             if (checkInterval) clearInterval(checkInterval);
             console.error("Timeout: Google Maps API không load được");
           }
-        }, 50); // Giảm interval xuống 50ms để check nhanh hơn
+        }, 50);
 
         return;
       }
 
-      // Tạo script mới
       const script = document.createElement("script");
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -170,7 +158,6 @@ export function GoogleMapsAutocomplete({
         return;
       }
 
-      // Tạo unique callback name để tránh conflict
       const callbackName = `initGoogleMaps_${Date.now()}`;
 
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
@@ -179,7 +166,6 @@ export function GoogleMapsAutocomplete({
 
       (window as any)[callbackName] = () => {
         delete (window as any)[callbackName];
-        // Khởi tạo ngay khi callback được gọi
         requestAnimationFrame(() => {
           if (inputRef.current) {
             initializeAutocomplete();
@@ -210,20 +196,16 @@ export function GoogleMapsAutocomplete({
       if (autocompleteRef.current && window.google?.maps?.event) {
         try {
           window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
-        } catch (e) {
-          // Ignore error
-        }
+        } catch (e) { }
       }
     };
   }, [disabled, initializeAutocomplete]);
 
-  // Đảm bảo autocomplete được khởi tạo khi input được focus hoặc click
   useEffect(() => {
     const input = inputRef.current;
     if (!input || disabled) return;
 
     const handleInteraction = () => {
-      // Nếu autocomplete chưa được khởi tạo và Google Maps đã sẵn sàng, khởi tạo ngay
       if (!autocompleteRef.current && window.google?.maps?.places) {
         requestAnimationFrame(() => {
           initializeAutocomplete();
@@ -231,7 +213,6 @@ export function GoogleMapsAutocomplete({
       }
     };
 
-    // Listen cả focus và click để đảm bảo autocomplete sẵn sàng
     input.addEventListener("focus", handleInteraction);
     input.addEventListener("click", handleInteraction);
 
@@ -241,11 +222,9 @@ export function GoogleMapsAutocomplete({
     };
   }, [disabled, initializeAutocomplete]);
 
-  // Đảm bảo autocomplete được khởi tạo khi user bắt đầu gõ
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onChange?.(e.target.value);
 
-    // Nếu autocomplete chưa được khởi tạo và Google Maps đã sẵn sàng, khởi tạo ngay
     if (!autocompleteRef.current && window.google?.maps?.places && !disabled) {
       requestAnimationFrame(() => {
         initializeAutocomplete();

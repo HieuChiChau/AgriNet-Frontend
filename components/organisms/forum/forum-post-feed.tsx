@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { ProductCategory } from "@/types/post";
-import { PostSearch } from "@/components/molecules/post-search";
-import { ForumPostCard } from "@/components/molecules/forum-post-card";
+import { PostSearch } from "@/components/molecules/post/post-search";
+import { ForumPostCard } from "@/components/molecules/forum/forum-post-card";
 import { SearchPostFormData } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 import { useForumPosts } from "@/hooks/query/forum";

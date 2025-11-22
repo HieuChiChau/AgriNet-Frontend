@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { PostSearchParams } from "@/types/post";
-import { PostList } from "@/components/molecules/post-list";
-import { PostSearch } from "@/components/molecules/post-search";
+import { PostList } from "@/components/molecules/post/post-list";
+import { PostSearch } from "@/components/molecules/post/post-search";
 import { useSearchPosts, usePosts } from "@/hooks/query/posts";
 
 export default function CustomerPostsPage() {
