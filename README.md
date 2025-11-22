@@ -122,7 +122,7 @@ Password: 123qwe!@#
 ### Tài khoản Farmer (Nông dân)
 
 ```
-Email: pham.duc.phuong610@example.com
+Email: le.huu.anh84@example.com
 Password: 123qwe!@#
 ```
 
