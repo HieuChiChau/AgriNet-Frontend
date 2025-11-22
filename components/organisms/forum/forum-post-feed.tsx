@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ProductCategory } from "@/types/post";
 import { ForumPostCard } from "@/components/molecules/forum/forum-post-card";
-import { cn } from "@/lib/utils";
 import { useForumPosts } from "@/hooks/query/forum";
 import { Skeleton } from "@/components/atoms/skeleton";
 import { ForumFilter } from "@/components/molecules/forum/forum-filter";
