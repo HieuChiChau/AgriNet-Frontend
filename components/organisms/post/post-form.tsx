@@ -83,7 +83,6 @@ export function PostForm({
     },
     mode: "onChange",
   });
-  const images = form.watch("images") ?? [];
 
   const handleSubmit = async (data: CreatePostFormData) => {
     const submitData = {

@@ -7,7 +7,7 @@ import { Post } from "@/types/post";
 import { ProductCategory, PostStatus } from "@/types/post";
 import { authService } from "@/lib/services";
 import type { PostDetailResponse } from "@/lib/services/post.service";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
+import { Card, CardContent, CardHeader } from "@/components/atoms/card";
 import { Icons } from "@/components/icons";
 import Link from "next/link";
 import { ForumPostGallery } from "@/components/molecules/forum/post-gallery";
@@ -123,8 +123,6 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
   const post = transformPostDetailToPost(data.result);
   const detail = data.result;
   const postAddress = detail.address || detail.user.address || "";
-  const postLatitude = detail.latitude || detail.user.latitude || "";
-  const postLongitude = detail.longitude || detail.user.longitude || "";
 
   const getTimeAgo = (dateString?: string) => {
     if (!dateString) return "";
