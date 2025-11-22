@@ -39,7 +39,7 @@ export function PostCard({ post, className }: PostCardProps) {
           <div className="flex items-center gap-1.5 text-sm text-gray-600">
             <Icons.locations className="h-4 w-4 text-green-600 flex-shrink-0" />
             <span className="line-clamp-1">
-              {post?.location?.address || `${post.location.district}, ${post.location.province}` || "-"}
+              {post?.location?.address || "-"}
             </span>
           </div>
         </CardContent>

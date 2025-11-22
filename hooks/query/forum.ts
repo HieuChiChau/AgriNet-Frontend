@@ -15,6 +15,7 @@ export function useForumPosts() {
   return useQuery({
     queryKey: forumKeys.posts,
     queryFn: () => forumService.getPosts(),
+    staleTime: 0,
   });
 }
 

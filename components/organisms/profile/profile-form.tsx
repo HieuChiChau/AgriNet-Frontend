@@ -119,7 +119,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
           );
           if (uploadResponse.status === "success" && uploadResponse.result?.fileUrl) {
             avatarUrl = uploadResponse.result.fileUrl;
-            console.log("Avatar uploaded:", avatarUrl);
           } else {
             throw new Error("Upload avatar thất bại");
           }

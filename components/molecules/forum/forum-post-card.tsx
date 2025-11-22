@@ -47,7 +47,7 @@ export function ForumPostCard({ post }: ForumPostCardProps) {
         <div className="mt-6 flex items-center justify-between text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-semibold">
-              {post.farmer.name.charAt(0)}
+              {post.farmer.firstName.charAt(0)}
             </div>
             <div>
               <p className="font-medium text-gray-900">{post.farmer.name}</p>

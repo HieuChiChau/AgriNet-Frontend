@@ -97,14 +97,12 @@ export function GoogleMapsAutocomplete({
           const latStr = lat.toFixed(8);
           const lngStr = lng.toFixed(8);
 
-          console.log("Place selected:", { address, lat: latStr, lng: lngStr });
           onSelectRef.current(address, latStr, lngStr);
         } catch (error) {
           console.error("Lỗi khi lấy tọa độ từ place:", error);
         }
       });
 
-      console.log("Autocomplete đã được khởi tạo thành công, listener đã attach");
       return true;
     } catch (error) {
       console.error("Lỗi khi khởi tạo Autocomplete:", error);
