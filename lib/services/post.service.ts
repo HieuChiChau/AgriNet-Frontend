@@ -139,7 +139,6 @@ export interface MyPostsResponse {
 }
 
 export const postService = {
-  // Get all posts
   getPosts: async (params?: PostSearchParams): Promise<PostsResponse> => {
     const response = await httpRequest.get<PostsResponse>(ApiUrl.POSTS, {
       params,
@@ -147,7 +146,6 @@ export const postService = {
     return response.data;
   },
 
-  // Get post by ID
   getPostById: async (id: string | number): Promise<PostDetailResponse> => {
     const response = await httpRequest.get<PostDetailResponse>(
       ApiUrl.POST_BY_ID(id)
@@ -155,7 +153,6 @@ export const postService = {
     return response.data;
   },
 
-  // Create post
   createPost: async (data: CreatePostData): Promise<PostResponse> => {
     const response = await httpRequest.post<PostResponse>(
       ApiUrl.CREATE_POST,
@@ -164,7 +161,6 @@ export const postService = {
     return response.data;
   },
 
-  // Update post
   updatePost: async (
     id: string | number,
     data: UpdatePostData
@@ -176,7 +172,6 @@ export const postService = {
     return response.data;
   },
 
-  // Delete post
   deletePost: async (
     id: string | number
   ): Promise<{ status: string; message?: string }> => {
@@ -184,7 +179,6 @@ export const postService = {
     return response.data;
   },
 
-  // Search posts
   searchPosts: async (params: PostSearchParams): Promise<PostsResponse> => {
     const response = await httpRequest.get<PostsResponse>(ApiUrl.SEARCH_POSTS, {
       params,
@@ -192,7 +186,6 @@ export const postService = {
     return response.data;
   },
 
-  // Get recommended posts
   getRecommendedPosts: async (): Promise<PostsResponse> => {
     const response = await httpRequest.get<PostsResponse>(
       ApiUrl.RECOMMENDED_POSTS
@@ -200,7 +193,6 @@ export const postService = {
     return response.data;
   },
 
-  // Get customers list
   getCustomers: async (params?: {
     province?: string;
     district?: string;
@@ -216,7 +208,6 @@ export const postService = {
     return response.data;
   },
 
-  // Get customer by ID
   getCustomerById: async (
     id: string | number
   ): Promise<{
@@ -228,7 +219,6 @@ export const postService = {
     return response.data;
   },
 
-  // Upload post image
   uploadPostImage: async (file: File): Promise<UploadPostImageResponse> => {
     const formData = new FormData();
     formData.append("file", file);
@@ -240,7 +230,6 @@ export const postService = {
     return response.data;
   },
 
-  // Get my posts
   getMyPosts: async (params?: {
     page?: number;
     limit?: number;

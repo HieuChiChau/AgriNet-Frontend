@@ -22,7 +22,6 @@ interface Comment {
   replies?: Comment[];
 }
 
-// Data cứng cho comments - tạo nhiều comments để test pagination
 const generateMockComments = (): Comment[] => {
   const comments: Comment[] = [];
   const names = [
@@ -82,7 +81,6 @@ export function PostCommentSection() {
   const [currentPage, setCurrentPage] = useState(1);
   const [newComment, setNewComment] = useState("");
 
-  // Tính toán comments hiển thị
   const totalPages = Math.ceil(allComments.length / COMMENTS_PER_PAGE);
   const startIndex = (currentPage - 1) * COMMENTS_PER_PAGE;
   const endIndex = startIndex + COMMENTS_PER_PAGE;
@@ -94,7 +92,6 @@ export function PostCommentSection() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    // TODO: Xử lý submit comment khi có API
     setNewComment("");
   };
 

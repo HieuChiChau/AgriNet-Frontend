@@ -8,13 +8,13 @@ export enum PostStatus {
 }
 
 export enum ProductCategory {
-  RICE = "rice", // Lúa gạo
-  VEGETABLES = "vegetables", // Rau củ
-  FRUITS = "fruits", // Trái cây
-  COFFEE = "coffee", // Cà phê
-  CASSAVA = "cassava", // Sắn
-  CORN = "corn", // Ngô
-  OTHER = "other", // Khác
+  RICE = "rice",
+  VEGETABLES = "vegetables",
+  FRUITS = "fruits",
+  COFFEE = "coffee",
+  CASSAVA = "cassava",
+  CORN = "corn",
+  OTHER = "other",
 }
 
 export interface Post {
@@ -24,7 +24,7 @@ export interface Post {
   category: ProductCategory;
   price: number;
   quantity: number;
-  unit: string; // kg, tấn, bao, etc.
+  unit: string;
   location: {
     province: string;
     district: string;

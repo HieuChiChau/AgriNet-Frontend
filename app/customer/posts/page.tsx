@@ -11,7 +11,6 @@ export default function CustomerPostsPage() {
   const searchQuery = useSearchPosts(searchParams);
   const defaultQuery = usePosts({ page: 1, limit: 20 });
 
-  // Sử dụng search results nếu có search params, ngược lại dùng default posts
   const hasSearchParams = searchParams && Object.keys(searchParams).length > 0;
   const { data, isLoading } = hasSearchParams ? searchQuery : defaultQuery;
 

@@ -23,7 +23,6 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
   const token = getAuthorizationClient();
   const isManagePage = pathname.startsWith("/manage");
 
-  // Chỉ fetch profile nếu có token và chưa có user
   const { data: profileData, isLoading: isProfileLoading } = useUserProfile({
     enabled: !!token && !user,
   });
@@ -39,7 +38,6 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
       return;
     }
 
-    // Nếu có profile data và chưa có user, set user
     if (profileData?.status === "success" && profileData.result && !user) {
       const transformedUser = authService.transformUser(profileData.result);
       setUser(transformedUser);
@@ -55,11 +53,9 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
         return;
       }
     } else if (token && !user && !isProfileLoading && !profileData) {
-      // Token có nhưng không fetch được profile -> logout
       logout();
     }
 
-    // Kiểm tra quyền truy cập nếu đã có user
     if (user && isManagePage && user.role !== UserRole.Admin) {
       toast({
         title: "Không có quyền truy cập",

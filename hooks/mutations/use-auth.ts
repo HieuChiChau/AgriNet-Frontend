@@ -83,11 +83,8 @@ export function useLogoutMutation() {
   return useMutation({
     mutationFn: () => authService.logout(),
     onSuccess: () => {
-      // Clear all queries
       queryClient.clear();
-      // Clear user state
       logout();
-      // Redirect to home
       router.push("/");
       toast({
         title: "Đăng xuất thành công",
@@ -95,7 +92,6 @@ export function useLogoutMutation() {
       });
     },
     onError: (error: any) => {
-      // Even if logout fails, clear local state
       queryClient.clear();
       logout();
       router.push("/");

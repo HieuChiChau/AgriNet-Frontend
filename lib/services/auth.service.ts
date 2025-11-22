@@ -84,7 +84,7 @@ export const authService = {
 
   uploadAvatar: async (file: File): Promise<UploadAvatarResponse> => {
     const formData = new FormData();
-    formData.append("file", file); // Field name phải là "file" theo API
+    formData.append("file", file);
 
     const response = await httpRequest.post<UploadAvatarResponse>(
       ApiUrl.AVATAR,

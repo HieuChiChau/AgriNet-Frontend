@@ -47,7 +47,7 @@ const roleLabels: Record<UserRole, string> = {
 export function ProfileForm({ user }: ProfileFormProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const avatarFileRef = useRef<File | null>(null); // Lưu file gốc để upload
+  const avatarFileRef = useRef<File | null>(null);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -88,7 +88,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
       return;
     }
 
-    // Lưu file gốc để upload sau
     avatarFileRef.current = file;
 
     const reader = new FileReader();
@@ -100,7 +99,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
   const handleRemoveAvatar = () => {
     form.setValue("avatar", "", { shouldDirty: true });
-    avatarFileRef.current = null; // Xóa file đã lưu
+    avatarFileRef.current = null;
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -113,7 +112,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
     try {
       let avatarUrl: string | null = null;
 
-      // Nếu có file ảnh mới, upload trước
       if (avatarFileRef.current) {
         try {
           const uploadResponse = await uploadAvatarMutation.mutateAsync(
@@ -126,7 +124,6 @@ export function ProfileForm({ user }: ProfileFormProps) {
             throw new Error("Upload avatar thất bại");
           }
         } catch (uploadError: any) {
-          // Error đã được handle trong mutation
           throw uploadError;
         }
       }
@@ -138,13 +135,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
         address: values.address || null,
         latitude: values.latitude ? parseFloat(values.latitude) : null,
         longitude: values.longitude ? parseFloat(values.longitude) : null,
-        // Chỉ gửi avatar nếu có upload ảnh mới
         ...(avatarUrl && { avatar: avatarUrl }),
       };
 
       await updateProfileMutation.mutateAsync(payload);
 
-      // Reset file ref sau khi upload thành công
       avatarFileRef.current = null;
 
       toast({

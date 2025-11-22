@@ -28,23 +28,19 @@ export function Pagination({
         pages.push(i);
       }
     } else {
-      // Logic hiển thị thông minh
       if (currentPage <= 3) {
-        // Gần đầu
         for (let i = 1; i <= 4; i++) {
           pages.push(i);
         }
         pages.push("...");
         pages.push(totalPages);
       } else if (currentPage >= totalPages - 2) {
-        // Gần cuối
         pages.push(1);
         pages.push("...");
         for (let i = totalPages - 3; i <= totalPages; i++) {
           pages.push(i);
         }
       } else {
-        // Ở giữa
         pages.push(1);
         pages.push("...");
         for (let i = currentPage - 1; i <= currentPage + 1; i++) {

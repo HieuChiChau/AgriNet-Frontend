@@ -41,7 +41,7 @@ export default function CreatePostPage() {
               throw new Error("Upload ảnh thất bại");
             }
           } catch (uploadError: any) {
-            return; // Error đã được handle trong mutation
+            return;
           }
         }
       }
@@ -77,7 +77,6 @@ export default function CreatePostPage() {
       });
       router.push("/farmer/posts");
     } catch (error: any) {
-      // Error đã được handle trong mutation
       if (!error?.response) {
         toast({
           title: "Lỗi",
