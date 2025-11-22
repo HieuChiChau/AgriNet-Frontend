@@ -9,11 +9,13 @@ export const ApiUrl = {
   // Posts
   POSTS: "/posts",
   POST_BY_ID: (id: string | number) => `/posts/${id}`,
-  CREATE_POST: "/posts",
+  CREATE_POST: "/posts/create",
+  GET_MY_POSTS: "/posts/list-my-post",
   UPDATE_POST: (id: string | number) => `/posts/${id}`,
   DELETE_POST: (id: string | number) => `/posts/${id}`,
   SEARCH_POSTS: "/posts/search",
   RECOMMENDED_POSTS: "/posts/recommended",
+  UPLOAD_POST_IMAGE: "/posts/upload-post-image",
 
   // Customers
   CUSTOMERS: "/customers",

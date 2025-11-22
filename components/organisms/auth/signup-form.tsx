@@ -25,7 +25,7 @@ import { authService } from "@/lib/services";
 export function SignupForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { setUser, setIsLoggedIn } = useUser();
+  const { setUser } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const registerMutation = useRegisterMutation();
 

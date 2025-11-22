@@ -27,7 +27,7 @@ export function LoginForm() {
   const router = useRouter();
   const redirectParam = searchParams.get("redirect") || "/";
   const { toast } = useToast();
-  const { setUser, setIsLoggedIn } = useUser();
+  const { setUser } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const loginMutation = useLoginMutation();
 

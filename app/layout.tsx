@@ -8,6 +8,7 @@ import AuthWrapper from "@/components/pages/AuthWrapper";
 import ReactQueryProvider from "@/components/providers/use-query";
 import { SiteHeader } from "@/components/organisms/site-header";
 import { SiteFooter } from "@/components/organisms/site-footer";
+import { ChatBox } from "@/components/organisms/chat-box";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -54,6 +55,7 @@ export default function RootLayout({
                 <main className="flex-1">{children}</main>
                 <SiteFooter />
               </div>
+              <ChatBox />
               <Toaster />
             </AuthWrapper>
           </ReactQueryProvider>

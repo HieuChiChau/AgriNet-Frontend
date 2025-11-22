@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/atoms/input";
 import { Icons } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -35,10 +35,8 @@ export function GoogleMapsAutocomplete({
 }: GoogleMapsAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
-  const [isReady, setIsReady] = useState(false);
   const onSelectRef = useRef(onSelect);
 
-  // Cập nhật ref khi onSelect thay đổi
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
@@ -77,7 +75,7 @@ export function GoogleMapsAutocomplete({
       autocompleteRef.current = autocomplete;
 
       // Attach listener ngay lập tức, không delay
-      const listener = autocomplete.addListener("place_changed", () => {
+      autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
 
         if (!place.geometry || !place.geometry.location) {
@@ -112,7 +110,6 @@ export function GoogleMapsAutocomplete({
         }
       });
 
-      setIsReady(true);
       console.log("Autocomplete đã được khởi tạo thành công, listener đã attach");
       return true;
     } catch (error) {

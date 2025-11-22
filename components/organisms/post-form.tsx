@@ -1,11 +1,10 @@
 "use client";
 
-import { ChangeEvent, useRef } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createPostSchema, type CreatePostFormData } from "@/lib/validations";
-import { ProductCategory } from "@/types/post";
 import {
   Form,
   FormControl,
@@ -17,75 +16,58 @@ import {
 } from "@/components/atoms/form";
 import { Input } from "@/components/atoms/input";
 import { Textarea } from "@/components/atoms/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/atoms/select";
 import { Button } from "@/components/atoms/button";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
+import { GoogleMapsAutocomplete } from "@/components/molecules/google-maps-autocomplete";
 
 interface PostFormProps {
-  onSubmit: (data: CreatePostFormData) => Promise<void>;
+  onSubmit: (data: CreatePostFormData & {
+    imageFiles: File[];
+    address?: string;
+    latitude?: string;
+    longitude?: string;
+  }) => Promise<void>;
   isLoading?: boolean;
   defaultValues?: Partial<CreatePostFormData>;
 }
 
-const categoryLabels: Record<ProductCategory, string> = {
-  [ProductCategory.RICE]: "Lúa gạo",
-  [ProductCategory.VEGETABLES]: "Rau củ",
-  [ProductCategory.FRUITS]: "Trái cây",
-  [ProductCategory.COFFEE]: "Cà phê",
-  [ProductCategory.CASSAVA]: "Sắn",
-  [ProductCategory.CORN]: "Ngô",
-  [ProductCategory.OTHER]: "Khác",
-};
-
-const vietnamProvinces = [
-  "An Giang", "Bà Rịa - Vũng Tàu", "Bắc Giang", "Bắc Kạn", "Bạc Liêu",
-  "Bắc Ninh", "Bến Tre", "Bình Định", "Bình Dương", "Bình Phước",
-  "Bình Thuận", "Cà Mau", "Cao Bằng", "Đắk Lắk", "Đắk Nông",
-  "Điện Biên", "Đồng Nai", "Đồng Tháp", "Gia Lai", "Hà Giang",
-  "Hà Nam", "Hà Tĩnh", "Hải Dương", "Hậu Giang", "Hòa Bình",
-  "Hưng Yên", "Khánh Hòa", "Kiên Giang", "Kon Tum", "Lai Châu",
-  "Lâm Đồng", "Lạng Sơn", "Lào Cai", "Long An", "Nam Định",
-  "Nghệ An", "Ninh Bình", "Ninh Thuận", "Phú Thọ", "Phú Yên",
-  "Quảng Bình", "Quảng Nam", "Quảng Ngãi", "Quảng Ninh", "Quảng Trị",
-  "Sóc Trăng", "Sơn La", "Tây Ninh", "Thái Bình", "Thái Nguyên",
-  "Thanh Hóa", "Thừa Thiên Huế", "Tiền Giang", "TP. Hồ Chí Minh",
-  "Trà Vinh", "Tuyên Quang", "Vĩnh Long", "Vĩnh Phúc", "Yên Bái",
-];
-
 const MAX_IMAGES = 5;
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+
+interface ImageWithFile {
+  dataUrl: string; // For preview
+  file: File; // For upload
+}
 
 export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFormProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageFiles, setImageFiles] = useState<ImageWithFile[]>([]);
+  const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState<string>("");
+  const [longitude, setLongitude] = useState<string>("");
+
   const form = useForm<CreatePostFormData>({
     resolver: zodResolver(createPostSchema),
     defaultValues: {
       title: "",
-      description: "",
-      category: ProductCategory.OTHER,
-      price: 0,
-      quantity: 0,
-      unit: "kg",
-      location: {
-        province: "",
-        district: "",
-      },
+      content: "",
       images: [],
       ...defaultValues,
     },
+    mode: "onChange",
   });
   const images = form.watch("images") ?? [];
 
   const handleSubmit = async (data: CreatePostFormData) => {
-    await onSubmit(data);
+    await onSubmit({
+      ...data,
+      imageFiles: imageFiles.map((img) => img.file),
+      address: address || undefined,
+      latitude: latitude || undefined,
+      longitude: longitude || undefined,
+    });
   };
 
   const readFileAsDataURL = (file: File) =>
@@ -127,16 +109,23 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
     if (!validFiles.length) return;
 
     const limitedFiles = validFiles.slice(0, remainingSlots);
-    const dataUrls = await Promise.all(
-      limitedFiles.map((file) => readFileAsDataURL(file))
+    const newImageFiles: ImageWithFile[] = await Promise.all(
+      limitedFiles.map(async (file) => ({
+        file,
+        dataUrl: await readFileAsDataURL(file),
+      }))
     );
-    const newImages = [...images, ...dataUrls];
-    form.setValue("images", newImages, { shouldDirty: true });
+
+    setImageFiles([...imageFiles, ...newImageFiles]);
+    const dataUrls = [...images, ...newImageFiles.map((img) => img.dataUrl)];
+    form.setValue("images", dataUrls, { shouldDirty: true });
   };
 
   const handleRemoveImage = (index: number) => {
-    const filtered = images.filter((_, idx) => idx !== index);
-    form.setValue("images", filtered, { shouldDirty: true });
+    const filteredFiles = imageFiles.filter((_, idx) => idx !== index);
+    setImageFiles(filteredFiles);
+    const filteredImages = images.filter((_, idx) => idx !== index);
+    form.setValue("images", filteredImages, { shouldDirty: true });
   };
 
   const triggerSelectImages = () => {
@@ -165,163 +154,51 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
 
         <FormField
           control={form.control}
-          name="description"
+          name="content"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Mô tả chi tiết</FormLabel>
+              <FormLabel>Nội dung</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Mô tả về sản phẩm, chất lượng, nguồn gốc..."
-                  className="min-h-[120px]"
+                  placeholder="Nhập nội dung bài đăng của bạn... (mô tả sản phẩm, giá cả, số lượng, địa điểm, v.v.)"
+                  className="min-h-[150px]"
                   {...field}
                 />
               </FormControl>
+              <FormDescription>
+                Bạn có thể nhập bất kỳ thông tin nào về sản phẩm của mình
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Danh mục</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn danh mục" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {Object.entries(categoryLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="unit"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Đơn vị</FormLabel>
-                <FormControl>
-                  <Input placeholder="kg, tấn, bao..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Giá (VNĐ)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Số lượng</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    {...field}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="location.province"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tỉnh/Thành phố</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn tỉnh/thành phố" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {vietnamProvinces.map((province) => (
-                      <SelectItem key={province} value={province}>
-                        {province}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="location.district"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Quận/Huyện</FormLabel>
-                <FormControl>
-                  <Input placeholder="Nhập quận/huyện" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="location.address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Địa chỉ chi tiết (tùy chọn)</FormLabel>
-              <FormControl>
-                <Input placeholder="Số nhà, tên đường..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <FormItem>
+          <FormLabel>Địa điểm (tùy chọn)</FormLabel>
+          <FormControl>
+            <GoogleMapsAutocomplete
+              value={address || ""}
+              latitude={latitude}
+              longitude={longitude}
+              onSelect={(addr, lat, lng) => {
+                setAddress(addr);
+                setLatitude(lat);
+                setLongitude(lng);
+              }}
+              onChange={(value) => {
+                setAddress(value);
+                if (!value) {
+                  setLatitude("");
+                  setLongitude("");
+                }
+              }}
+              placeholder="Nhập địa chỉ để tự động lấy tọa độ (để trống sẽ dùng địa chỉ của bạn)..."
+            />
+          </FormControl>
+          <FormDescription>
+            Nếu không nhập, hệ thống sẽ sử dụng địa chỉ của bạn
+          </FormDescription>
+        </FormItem>
 
         <FormField
           control={form.control}
@@ -342,13 +219,13 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
                   onChange={handleImageUpload}
                 />
                 <div className="flex flex-wrap gap-3">
-                  {images.map((src, idx) => (
+                  {imageFiles.map((img, idx) => (
                     <div
-                      key={`${src}-${idx}`}
+                      key={`${img.dataUrl}-${idx}`}
                       className="relative h-28 w-28 overflow-hidden rounded-xl border border-green-100 shadow-sm"
                     >
                       <Image
-                        src={src}
+                        src={img.dataUrl}
                         alt={`Ảnh ${idx + 1}`}
                         fill
                         sizes="112px"
@@ -364,7 +241,7 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
                       </button>
                     </div>
                   ))}
-                  {images.length < MAX_IMAGES && (
+                  {imageFiles.length < MAX_IMAGES && (
                     <button
                       type="button"
                       onClick={triggerSelectImages}

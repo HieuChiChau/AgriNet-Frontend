@@ -1,11 +1,7 @@
 import { httpRequest } from "@/lib/apis/httpRequest";
 import { ApiUrl } from "@/constants/api-url";
 import { AuthResponse, User, UserProfile, ApiResponse } from "@/types/user";
-import {
-  LoginFormData,
-  RegisterFormData,
-  ProfileFormData,
-} from "@/lib/validations";
+import { LoginFormData, RegisterFormData } from "@/lib/validations";
 import { removeAuthorization } from "@/lib/apis/cache-client";
 
 type RegisterPayload = Omit<RegisterFormData, "confirmPassword">;
