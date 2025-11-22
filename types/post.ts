@@ -43,6 +43,7 @@ export interface Post {
   expiresAt?: string;
   views?: number;
   interestedCustomers?: number;
+  user?: User;
 }
 
 export interface CreatePostData {

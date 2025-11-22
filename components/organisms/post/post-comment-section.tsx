@@ -80,6 +80,37 @@ export function PostCommentSection({ postId }: PostCommentSectionProps) {
   const totalPages = commentsData?.result?.totalPage || 1;
   const displayedComments = comments.map(transformCommentItem);
 
+  const getTimeAgo = (createdAt: string): string => {
+    try {
+      const date = new Date(createdAt);
+      if (isNaN(date.getTime())) {
+        return "Vừa xong";
+      }
+
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+      // Dưới 1 phút
+      if (diffInSeconds < 60) {
+        return "Vừa xong";
+      }
+
+      // Dưới 1 giờ - hiển thị số phút cụ thể
+      const diffInMinutes = Math.floor(diffInSeconds / 60);
+      if (diffInMinutes < 60) {
+        return `${diffInMinutes} phút trước`;
+      }
+
+      // Từ 1 giờ trở lên - dùng formatDistanceToNow
+      return formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: vi,
+      });
+    } catch (error) {
+      return "Vừa xong";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -135,10 +166,7 @@ export function PostCommentSection({ postId }: PostCommentSectionProps) {
             </p>
             <p className="text-xs text-gray-500">
               {comment.author.location && `${comment.author.location} · `}
-              {formatDistanceToNow(new Date(comment.createdAt), {
-                addSuffix: true,
-                locale: vi,
-              })}
+              {getTimeAgo(comment.createdAt)}
             </p>
           </div>
         </div>

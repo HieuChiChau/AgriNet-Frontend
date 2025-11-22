@@ -39,16 +39,16 @@ export function PostCard({ post, className }: PostCardProps) {
           <div className="flex items-center gap-1.5 text-sm text-gray-600">
             <Icons.locations className="h-4 w-4 text-green-600 flex-shrink-0" />
             <span className="line-clamp-1">
-              {post.location.address || `${post.location.district}, ${post.location.province}`}
+              {post?.location?.address || `${post.location.district}, ${post.location.province}` || "-"}
             </span>
           </div>
         </CardContent>
         <CardFooter className="flex items-center gap-2 text-sm border-t border-green-50 pt-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white text-xs font-bold flex-shrink-0">
-            {post.farmer.name.charAt(0).toUpperCase()}
+            {post.user?.firstName?.charAt(0).toUpperCase()}
           </div>
           <span className="text-gray-600 font-medium truncate">
-            {post.farmer.name}
+            {post.user?.firstName}{" "}{post.user?.lastName}
           </span>
         </CardFooter>
       </Card>
