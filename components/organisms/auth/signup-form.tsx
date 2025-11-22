@@ -16,16 +16,12 @@ import {
   FormMessage,
 } from "@/components/atoms/form";
 import { Input } from "@/components/atoms/input";
-import { useToast } from "@/hooks/use-toast";
 import { setAuthorization } from "@/lib/apis/cache-client";
-import { useUser } from "@/hooks/use-user";
 import { UserRole } from "@/constants/role";
 import { authService } from "@/lib/services";
 
 export function SignupForm() {
   const router = useRouter();
-  const { toast } = useToast();
-  const { setUser } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const registerMutation = useRegisterMutation();
 
@@ -59,22 +55,13 @@ export function SignupForm() {
 
       setAuthorization(response.result.accessToken);
 
+      // User đã được set trong mutation onSuccess, nhưng cần transform để redirect
       const user = authService.transformUser(response.result.profile);
-      setUser(user);
-
-      toast({
-        title: "Đăng ký thành công",
-        description: "Tài khoản của bạn đã sẵn sàng!",
-      });
 
       router.push(resolveRedirect(user.role));
       router.refresh();
     } catch (error: any) {
-      toast({
-        title: "Đăng ký thất bại",
-        description: error?.response?.data?.message || error?.message || "Vui lòng thử lại",
-        variant: "destructive",
-      });
+      // Error đã được handle trong mutation
     } finally {
       setIsSubmitting(false);
     }

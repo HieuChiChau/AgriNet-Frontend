@@ -1,39 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { postService } from "@/lib/services";
-import { Post } from "@/types/post";
-import { useToast } from "@/hooks/use-toast";
 import { PostList } from "@/components/molecules/post-list";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Icons } from "@/components/icons";
+import { useRecommendedPosts } from "@/hooks/query/posts";
 
 export default function RecommendationsPage() {
-  const { toast } = useToast();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = useRecommendedPosts();
 
-  useEffect(() => {
-    const fetchRecommendations = async () => {
-      try {
-        setIsLoading(true);
-        const response = await postService.getRecommendedPosts();
-        if (response.status === "success") {
-          setPosts(response.result.data);
-        }
-      } catch (error) {
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải gợi ý",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchRecommendations();
-  }, [toast]);
+  const posts = data?.status === "success" ? data.result.data : [];
 
   return (
     <div className="space-y-6 p-6">

@@ -1,33 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { postService } from "@/lib/services";
-import { Post, PostSearchParams } from "@/types/post";
-import { useToast } from "@/hooks/use-toast";
+import { PostSearchParams } from "@/types/post";
 import { PostList } from "@/components/molecules/post-list";
 import { PostSearch } from "@/components/molecules/post-search";
+import { useSearchPosts, usePosts } from "@/hooks/query/posts";
 
 export default function CustomerPostsPage() {
-  const { toast } = useToast();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [searchParams, setSearchParams] = useState<PostSearchParams | undefined>();
+  const searchQuery = useSearchPosts(searchParams);
+  const defaultQuery = usePosts({ page: 1, limit: 20 });
 
-  const handleSearch = async (params: PostSearchParams) => {
-    try {
-      setIsLoading(true);
-      const response = await postService.searchPosts(params);
-      if (response.status === "success") {
-        setPosts(response.result.data);
-      }
-    } catch (error) {
-      toast({
-        title: "Lỗi",
-        description: "Không thể tìm kiếm bài đăng",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  // Sử dụng search results nếu có search params, ngược lại dùng default posts
+  const hasSearchParams = searchParams && Object.keys(searchParams).length > 0;
+  const { data, isLoading } = hasSearchParams ? searchQuery : defaultQuery;
+
+  const posts = data?.status === "success" ? data.result.data : [];
+
+  const handleSearch = (params: PostSearchParams) => {
+    setSearchParams(params);
   };
 
   return (

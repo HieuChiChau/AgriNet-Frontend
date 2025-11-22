@@ -11,14 +11,10 @@ const forumKeys = {
     ["forum", "posts", id, "comments"] as const,
 };
 
-export function useForumPosts(initialData?: ForumPost[]) {
+export function useForumPosts() {
   return useQuery({
     queryKey: forumKeys.posts,
     queryFn: () => forumService.getPosts(),
-    ...(initialData && {
-      initialData,
-      staleTime: 0, // Mark as stale immediately to refetch
-    }),
   });
 }
 

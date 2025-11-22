@@ -26,6 +26,45 @@ export interface PostResponse {
   message?: string;
 }
 
+export interface PostDetailResponse {
+  status: string;
+  message: string;
+  result: {
+    id: string;
+    title: string;
+    content: string;
+    category: {
+      id: string;
+      name: string;
+      image: string;
+    } | null;
+    user: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone: string | null;
+      avatar: string | null;
+      latitude: string;
+      longitude: string;
+      address: string;
+      role: number;
+      status: number;
+    };
+    images: {
+      id: string;
+      fileName: string | null;
+      url: string;
+    }[];
+    embedding: {
+      id: string;
+      productName: string;
+      price: string;
+      quantity: string;
+    } | null;
+  };
+}
+
 export interface CustomersResponse {
   status: string;
   result: {
@@ -109,8 +148,10 @@ export const postService = {
   },
 
   // Get post by ID
-  getPostById: async (id: string | number): Promise<PostResponse> => {
-    const response = await httpRequest.get<PostResponse>(ApiUrl.POST_BY_ID(id));
+  getPostById: async (id: string | number): Promise<PostDetailResponse> => {
+    const response = await httpRequest.get<PostDetailResponse>(
+      ApiUrl.POST_BY_ID(id)
+    );
     return response.data;
   },
 

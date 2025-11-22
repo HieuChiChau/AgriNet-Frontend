@@ -18,6 +18,14 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      {
+        protocol: "https",
+        hostname: "api.thuexeonline.site",
+      },
+      {
+        protocol: "http",
+        hostname: "api.thuexeonline.site",
+      },
     ],
   },
 };

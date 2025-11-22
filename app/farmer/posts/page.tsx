@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { postService } from "@/lib/services";
 import type { MyPost } from "@/lib/services/post.service";
 import { Post } from "@/types/post";
-import { useToast } from "@/hooks/use-toast";
 import { PostList } from "@/components/molecules/post-list";
 import { ProductCategory, PostStatus } from "@/types/post";
 import { authService } from "@/lib/services";
+import { useMyPosts } from "@/hooks/query/posts";
 
 function transformMyPostToPost(myPost: MyPost): Post {
   return {
@@ -63,38 +61,15 @@ function transformMyPostToPost(myPost: MyPost): Post {
 }
 
 export default function FarmerPostsPage() {
-  const { toast } = useToast();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = useMyPosts({
+    page: 1,
+    limit: 20,
+  });
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await postService.getMyPosts({
-          page: 1,
-          limit: 20,
-        });
-        if (response.status === "success") {
-          const transformedPosts = response.result.data.map(transformMyPostToPost);
-          setPosts(transformedPosts);
-        }
-      } catch (error: any) {
-        toast({
-          title: "Lỗi",
-          description:
-            error?.response?.data?.message ||
-            error?.message ||
-            "Không thể tải danh sách bài đăng",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, [toast]);
+  const posts =
+    data?.status === "success"
+      ? data.result.data.map(transformMyPostToPost)
+      : [];
 
   return (
     <div className="space-y-6 p-6">

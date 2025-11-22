@@ -28,7 +28,7 @@ export function PostCard({ post, className }: PostCardProps) {
           </div>
         )}
         <CardHeader>
-          <CardTitle className="line-clamp-2 text-green-700 group-hover:text-green-600 transition-colors">
+          <CardTitle className=" text-green-700 group-hover:text-green-600 transition-colors">
             {post.title}
           </CardTitle>
           <CardDescription className="line-clamp-3 text-sm">

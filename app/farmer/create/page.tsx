@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { postService } from "@/lib/services";
 import { useToast } from "@/hooks/use-toast";
 import { PostForm } from "@/components/organisms/post-form";
 import { CreatePostFormData } from "@/lib/validations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { useUser } from "@/hooks/use-user";
+import { useCreatePostMutation, useUploadPostImageMutation } from "@/hooks/mutations/posts";
 
 export default function CreatePostPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useUser();
-  const [isLoading, setIsLoading] = useState(false);
+  const createPostMutation = useCreatePostMutation();
+  const uploadImageMutation = useUploadPostImageMutation();
 
   const handleSubmit = async (
     data: CreatePostFormData & {
@@ -24,9 +24,8 @@ export default function CreatePostPage() {
     }
   ) => {
     try {
-      setIsLoading(true);
-
       const imageUrls: string[] = [];
+
       if (data.imageFiles && data.imageFiles.length > 0) {
         toast({
           title: "Đang upload ảnh...",
@@ -35,19 +34,14 @@ export default function CreatePostPage() {
 
         for (const file of data.imageFiles) {
           try {
-            const uploadResponse = await postService.uploadPostImage(file);
+            const uploadResponse = await uploadImageMutation.mutateAsync(file);
             if (uploadResponse.status === "success" && uploadResponse.result?.fileUrl) {
               imageUrls.push(uploadResponse.result.fileUrl);
             } else {
               throw new Error("Upload ảnh thất bại");
             }
           } catch (uploadError: any) {
-            toast({
-              title: "Upload ảnh thất bại",
-              description: uploadError?.response?.data?.message || uploadError?.message || "Không thể upload ảnh",
-              variant: "destructive",
-            });
-            return;
+            return; // Error đã được handle trong mutation
           }
         }
       }
@@ -75,25 +69,22 @@ export default function CreatePostPage() {
         address: finalAddress || "",
       };
 
-      const response = await postService.createPost(payload as any);
+      await createPostMutation.mutateAsync(payload as any);
 
-      if (response.status === "success") {
-        toast({
-          title: "Thành công",
-          description: "Bài đăng đã được tạo thành công!",
-        });
-        router.push("/farmer/posts");
-      } else {
-        throw new Error(response.message || "Tạo bài đăng thất bại");
-      }
-    } catch (error: any) {
       toast({
-        title: "Lỗi",
-        description: error?.response?.data?.message || error?.message || "Không thể tạo bài đăng",
-        variant: "destructive",
+        title: "Thành công",
+        description: "Bài đăng đã được tạo thành công!",
       });
-    } finally {
-      setIsLoading(false);
+      router.push("/farmer/posts");
+    } catch (error: any) {
+      // Error đã được handle trong mutation
+      if (!error?.response) {
+        toast({
+          title: "Lỗi",
+          description: error?.message || "Không thể tạo bài đăng",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -114,7 +105,10 @@ export default function CreatePostPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <PostForm onSubmit={handleSubmit} isLoading={isLoading} />
+          <PostForm
+            onSubmit={handleSubmit}
+            isLoading={createPostMutation.isPending || uploadImageMutation.isPending}
+          />
         </CardContent>
       </Card>
     </div>

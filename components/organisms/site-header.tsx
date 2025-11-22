@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/atoms/button";
 import {
   DropdownMenu,
@@ -17,8 +16,7 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@/hooks/use-user";
 import { UserRole } from "@/constants/role";
 import { useMobileMenu } from "@/hooks/use-mobile-menu";
-import { authService } from "@/lib/services";
-import { useToast } from "@/hooks/use-toast";
+import { useLogoutMutation } from "@/hooks/mutations/use-auth";
 
 const publicLinks = [
   { label: "Trang chủ", href: "/" },
@@ -45,10 +43,9 @@ const dashboardPrefixes = ["/farmer", "/customer", "/manage"];
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { toast } = useToast();
-  const { user, logout } = useUser();
+  const { user } = useUser();
   const { isOpen, toggle, close } = useMobileMenu();
+  const logoutMutation = useLogoutMutation();
 
   const shouldHide = dashboardPrefixes.some((prefix) =>
     pathname.startsWith(prefix)
@@ -68,15 +65,8 @@ export function SiteHeader() {
     return specific?.href ?? "/";
   }, [user]);
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      logout();
-      router.push("/");
-      toast({ title: "Đăng xuất thành công" });
-    } catch (error) {
-      toast({ title: "Đăng xuất thất bại", variant: "destructive" });
-    }
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   if (shouldHide) {

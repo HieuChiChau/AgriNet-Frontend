@@ -1,12 +1,11 @@
 "use client";
 
 import { ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
-import { useToast } from "@/hooks/use-toast";
-import { authService } from "@/lib/services";
 import { FarmerNavItems } from "@/constants/navigation";
 import { DashboardLayoutShell } from "@/components/templates/dashboard-layout-shell";
+import { useLogoutMutation } from "@/hooks/mutations/use-auth";
 
 export default function FarmerLayout({
   children,
@@ -14,19 +13,11 @@ export default function FarmerLayout({
   children: ReactNode;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout } = useUser();
-  const { toast } = useToast();
+  const { user } = useUser();
+  const logoutMutation = useLogoutMutation();
 
-  const handleLogout = async () => {
-    try {
-      await authService.logout();
-      logout();
-      router.push("/");
-      toast({ title: "Đăng xuất thành công" });
-    } catch (error) {
-      toast({ title: "Đăng xuất thất bại", variant: "destructive" });
-    }
+  const handleLogout = () => {
+    logoutMutation.mutate();
   };
 
   return (

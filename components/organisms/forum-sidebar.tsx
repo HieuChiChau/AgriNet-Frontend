@@ -89,7 +89,7 @@ export function ForumSidebar() {
                   <p className="text-sm font-semibold text-gray-900 line-clamp-1">
                     {post.title}
                   </p>
-                  <p className="text-xs text-gray-500 line-clamp-2">
+                  <p className="text-xs text-gray-500">
                     {post.excerpt}
                   </p>
                 </div>

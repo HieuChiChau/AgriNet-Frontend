@@ -1,0 +1,116 @@
+"use client";
+
+import { Button } from "@/components/atoms/button";
+import { Icons } from "@/components/icons";
+import { cn } from "@/lib/utils";
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  className?: string;
+}
+
+export function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  className,
+}: PaginationProps) {
+  if (totalPages <= 1) return null;
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Logic hiển thị thông minh
+      if (currentPage <= 3) {
+        // Gần đầu
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Gần cuối
+        pages.push(1);
+        pages.push("...");
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // Ở giữa
+        pages.push(1);
+        pages.push("...");
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  return (
+    <div className={cn("flex items-center justify-center gap-2", className)}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50"
+      >
+        <Icons.chevronLeft className="h-4 w-4" />
+      </Button>
+
+      {getPageNumbers().map((page, index) => {
+        if (page === "...") {
+          return (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-2 text-gray-400"
+            >
+              ...
+            </span>
+          );
+        }
+
+        const pageNum = page as number;
+        return (
+          <Button
+            key={pageNum}
+            variant={currentPage === pageNum ? "default" : "outline"}
+            size="sm"
+            onClick={() => onPageChange(pageNum)}
+            className={cn(
+              "min-w-[36px]",
+              currentPage === pageNum
+                ? "bg-gradient-to-r from-green-500 to-green-600 text-white border-green-600"
+                : "border-green-200 text-green-700 hover:bg-green-50"
+            )}
+          >
+            {pageNum}
+          </Button>
+        );
+      })}
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50"
+      >
+        <Icons.chevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+

@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ForumPost } from "@/types/forum";
 import { ProductCategory } from "@/types/post";
 import { PostSearch } from "@/components/molecules/post-search";
 import { ForumPostCard } from "@/components/molecules/forum-post-card";
@@ -10,12 +9,8 @@ import { cn } from "@/lib/utils";
 import { useForumPosts } from "@/hooks/query/forum";
 import { Skeleton } from "@/components/atoms/skeleton";
 
-interface ForumPostFeedProps {
-  posts?: ForumPost[];
-}
-
-export function ForumPostFeed({ posts = [] }: ForumPostFeedProps) {
-  const { data: postsData = posts, isLoading } = useForumPosts(posts);
+export function ForumPostFeed() {
+  const { data: postsData = [], isLoading } = useForumPosts();
   const [searchParams, setSearchParams] = useState<SearchPostFormData | null>(
     null
   );

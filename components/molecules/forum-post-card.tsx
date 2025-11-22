@@ -31,7 +31,7 @@ export function ForumPostCard({ post }: ForumPostCardProps) {
         <h3 className="mt-4 text-xl font-semibold text-gray-900 group-hover:text-green-700">
           {post.title}
         </h3>
-        <p className="mt-2 text-sm text-gray-600 line-clamp-2">{post.excerpt}</p>
+        <p className="mt-2 text-sm text-gray-600">{post.excerpt}</p>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {post.tags.slice(0, 3).map((tag) => (

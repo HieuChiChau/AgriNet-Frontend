@@ -16,9 +16,7 @@ import {
   FormMessage,
 } from "@/components/atoms/form";
 import { Input } from "@/components/atoms/input";
-import { useToast } from "@/hooks/use-toast";
 import { setAuthorization } from "@/lib/apis/cache-client";
-import { useUser } from "@/hooks/use-user";
 import { UserRole } from "@/constants/role";
 import { authService } from "@/lib/services";
 
@@ -26,8 +24,6 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirectParam = searchParams.get("redirect") || "/";
-  const { toast } = useToast();
-  const { setUser } = useUser();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const loginMutation = useLoginMutation();
 
@@ -62,22 +58,13 @@ export function LoginForm() {
 
       setAuthorization(response.result.accessToken);
 
+      // User đã được set trong mutation onSuccess, nhưng cần transform để redirect
       const user = authService.transformUser(response.result.profile);
-      setUser(user);
-
-      toast({
-        title: "Đăng nhập thành công",
-        description: "Chào mừng bạn trở lại AgriNet!",
-      });
 
       router.push(resolveRedirect(user.role));
       router.refresh();
     } catch (error: any) {
-      toast({
-        title: "Đăng nhập thất bại",
-        description: error?.response?.data?.message || error?.message || "Vui lòng thử lại",
-        variant: "destructive",
-      });
+      // Error đã được handle trong mutation
     } finally {
       setIsSubmitting(false);
     }

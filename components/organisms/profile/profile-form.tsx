@@ -23,8 +23,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/atoms/avatar";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/hooks/use-user";
-import { authService, UpdateProfilePayload } from "@/lib/services";
+import { UpdateProfilePayload } from "@/lib/services";
+import { useUpdateProfileMutation, useUploadAvatarMutation } from "@/hooks/mutations/user";
 import {
   profileSchema,
   type ProfileFormData,
@@ -46,7 +46,6 @@ const roleLabels: Record<UserRole, string> = {
 
 export function ProfileForm({ user }: ProfileFormProps) {
   const { toast } = useToast();
-  const { setUser } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const avatarFileRef = useRef<File | null>(null); // Lưu file gốc để upload
 
@@ -107,6 +106,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
     }
   };
 
+  const uploadAvatarMutation = useUploadAvatarMutation();
+  const updateProfileMutation = useUpdateProfileMutation();
+
   const onSubmit = async (values: ProfileFormData) => {
     try {
       let avatarUrl: string | null = null;
@@ -114,7 +116,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
       // Nếu có file ảnh mới, upload trước
       if (avatarFileRef.current) {
         try {
-          const uploadResponse = await authService.uploadAvatar(avatarFileRef.current);
+          const uploadResponse = await uploadAvatarMutation.mutateAsync(
+            avatarFileRef.current
+          );
           if (uploadResponse.status === "success" && uploadResponse.result?.fileUrl) {
             avatarUrl = uploadResponse.result.fileUrl;
             console.log("Avatar uploaded:", avatarUrl);
@@ -122,11 +126,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
             throw new Error("Upload avatar thất bại");
           }
         } catch (uploadError: any) {
-          toast({
-            title: "Upload ảnh thất bại",
-            description: uploadError?.response?.data?.message || uploadError?.message || "Không thể upload ảnh đại diện",
-            variant: "destructive",
-          });
+          // Error đã được handle trong mutation
           throw uploadError;
         }
       }
@@ -142,30 +142,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
         ...(avatarUrl && { avatar: avatarUrl }),
       };
 
-      const response = await authService.updateProfile(payload);
-      if (response.status !== "success" || !response.result) {
-        throw new Error("Cập nhật thất bại");
-      }
+      await updateProfileMutation.mutateAsync(payload);
 
       // Reset file ref sau khi upload thành công
       avatarFileRef.current = null;
 
-      const profileResponse = await authService.getProfile();
-      if (profileResponse.status === "success" && profileResponse.result) {
-        const fullUser = authService.transformUser(profileResponse.result);
-        setUser(fullUser);
-      } else {
-        const updatedProfile = authService.transformUser(response.result);
-        const mergedUser: User = {
-          ...user,
-          ...updatedProfile,
-          avatar: updatedProfile.avatar ?? user.avatar,
-          email: updatedProfile.email ?? user.email,
-          role: updatedProfile.role ?? user.role,
-          status: updatedProfile.status ?? user.status,
-        };
-        setUser(mergedUser);
-      }
       toast({
         title: "Cập nhật thành công",
         description: "Thông tin cá nhân đã được lưu lại.",
@@ -441,7 +422,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                   variant="outline"
                   className="border-green-200"
                   onClick={() => form.reset()}
-                  disabled={form.formState.isSubmitting}
+                  disabled={updateProfileMutation.isPending || uploadAvatarMutation.isPending}
                 >
                   Đặt lại
                 </Button>
@@ -450,9 +431,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
                   className={cn(
                     "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow"
                   )}
-                  disabled={form.formState.isSubmitting}
+                  disabled={updateProfileMutation.isPending || uploadAvatarMutation.isPending}
                 >
-                  {form.formState.isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+                  {updateProfileMutation.isPending || uploadAvatarMutation.isPending
+                    ? "Đang lưu..."
+                    : "Lưu thay đổi"}
                 </Button>
               </div>
             </form>

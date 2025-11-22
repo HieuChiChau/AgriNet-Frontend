@@ -1,43 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { postService } from "@/lib/services";
-import { Customer } from "@/types/post";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Badge } from "@/components/atoms/badge";
 import { Icons } from "@/components/icons";
 import { Skeleton } from "@/components/atoms/skeleton";
+import { useCustomers } from "@/hooks/query/posts";
 
 export default function CustomersPage() {
-  const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = useCustomers({
+    page: 1,
+    limit: 50,
+  });
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setIsLoading(true);
-        const response = await postService.getCustomers({
-          page: 1,
-          limit: 50,
-        });
-        if (response.status === "success") {
-          setCustomers(response.result.data);
-        }
-      } catch (error) {
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải danh sách thương lái",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCustomers();
-  }, [toast]);
+  const customers =
+    data?.status === "success" ? data.result.data : [];
 
   if (isLoading) {
     return (

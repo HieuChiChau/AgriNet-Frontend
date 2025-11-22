@@ -1,46 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/use-user";
-import { postService } from "@/lib/services";
-import { Post } from "@/types/post";
-import { useToast } from "@/hooks/use-toast";
 import { PostList } from "@/components/molecules/post-list";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
 import { Icons } from "@/components/icons";
 import Link from "next/link";
+import { usePosts } from "@/hooks/query/posts";
 
 export default function FarmerDashboard() {
   const { user } = useUser();
-  const { toast } = useToast();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading } = usePosts({
+    page: 1,
+    limit: 6,
+  });
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setIsLoading(true);
-        const response = await postService.getPosts({
-          page: 1,
-          limit: 6,
-        });
-        if (response.status === "success") {
-          setPosts(response.result.data);
-        }
-      } catch (error) {
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải danh sách bài đăng",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPosts();
-  }, [toast]);
+  const posts =
+    data?.status === "success" ? data.result.data : [];
 
   return (
     <div className="space-y-6 p-6">

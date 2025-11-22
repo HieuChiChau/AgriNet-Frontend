@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { forumService } from "@/lib/services";
 import { ForumPageClient } from "@/components/pages/forum/forum-page-client";
 
 export const metadata = {
@@ -7,9 +6,7 @@ export const metadata = {
   description: "Nơi kết nối nông dân, thương lái và doanh nghiệp logistics.",
 };
 
-export default async function ForumPage() {
-  const posts = await forumService.getPosts();
-
+export default function ForumPage() {
   return (
     <div className="bg-gradient-to-b from-green-50 via-white to-yellow-50">
       <section className="container space-y-6 py-16">
@@ -51,7 +48,7 @@ export default async function ForumPage() {
           </div>
         </div>
 
-        <ForumPageClient initialPosts={posts} />
+        <ForumPageClient />
       </section>
     </div>
   );
