@@ -1,7 +1,8 @@
 export const ApiUrl = {
   // Auth
-  GET_PROFILE: "/auth/profile",
-  UPDATE_PROFILE: (id: string | number) => `/auth/profile/${id}`,
+  GET_PROFILE: "/users/profile",
+  UPDATE_PROFILE: "/users/update-profile",
+  AVATAR: "/users/upload-avatar",
   LOGIN: "/auth/login",
   REGISTER: "/auth/register",
 
@@ -14,7 +15,7 @@ export const ApiUrl = {
   SEARCH_POSTS: "/posts/search",
   RECOMMENDED_POSTS: "/posts/recommended",
 
-  // Customers (Khách hàng)
+  // Customers
   CUSTOMERS: "/customers",
   CUSTOMER_BY_ID: (id: string | number) => `/customers/${id}`,
 

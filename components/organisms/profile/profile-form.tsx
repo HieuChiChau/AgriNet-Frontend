@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/atoms/form";
 import { Input } from "@/components/atoms/input";
-import { Textarea } from "@/components/atoms/textarea";
 import { Button } from "@/components/atoms/button";
 import {
   Card,
@@ -25,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/atoms/avatar";
 import { Icons } from "@/components/icons";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/hooks/use-user";
-import { authService } from "@/lib/services";
+import { authService, UpdateProfilePayload } from "@/lib/services";
 import {
   profileSchema,
   type ProfileFormData,
@@ -33,6 +32,7 @@ import {
 import { User } from "@/types/user";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/constants/role";
+import { GoogleMapsAutocomplete } from "@/components/molecules/google-maps-autocomplete";
 
 interface ProfileFormProps {
   user: User;
@@ -48,16 +48,19 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const { toast } = useToast();
   const { setUser } = useUser();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const avatarFileRef = useRef<File | null>(null); // Lưu file gốc để upload
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user.name,
+      firstName: user.firstName || user.name?.split(" ")[0] || "",
+      lastName: user.lastName || user.name?.split(" ").slice(1).join(" ") || "",
       email: user.email,
       avatar: user.avatar || "",
       phone: user.phone || "",
-      location: user.location || "",
-      bio: user.bio || "",
+      address: user.address || user.location || "",
+      latitude: user.latitude || "",
+      longitude: user.longitude || "",
     },
     mode: "onChange",
   });
@@ -86,6 +89,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
       return;
     }
 
+    // Lưu file gốc để upload sau
+    avatarFileRef.current = file;
+
     const reader = new FileReader();
     reader.onload = () => {
       form.setValue("avatar", reader.result as string, { shouldDirty: true });
@@ -95,6 +101,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
   const handleRemoveAvatar = () => {
     form.setValue("avatar", "", { shouldDirty: true });
+    avatarFileRef.current = null; // Xóa file đã lưu
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -102,11 +109,63 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
   const onSubmit = async (values: ProfileFormData) => {
     try {
-      const response = await authService.updateProfile(user.id, values);
+      let avatarUrl: string | null = null;
+
+      // Nếu có file ảnh mới, upload trước
+      if (avatarFileRef.current) {
+        try {
+          const uploadResponse = await authService.uploadAvatar(avatarFileRef.current);
+          if (uploadResponse.status === "success" && uploadResponse.result?.fileUrl) {
+            avatarUrl = uploadResponse.result.fileUrl;
+            console.log("Avatar uploaded:", avatarUrl);
+          } else {
+            throw new Error("Upload avatar thất bại");
+          }
+        } catch (uploadError: any) {
+          toast({
+            title: "Upload ảnh thất bại",
+            description: uploadError?.response?.data?.message || uploadError?.message || "Không thể upload ảnh đại diện",
+            variant: "destructive",
+          });
+          throw uploadError;
+        }
+      }
+
+      const payload: UpdateProfilePayload = {
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        phone: values.phone || null,
+        address: values.address || null,
+        latitude: values.latitude ? parseFloat(values.latitude) : null,
+        longitude: values.longitude ? parseFloat(values.longitude) : null,
+        // Chỉ gửi avatar nếu có upload ảnh mới
+        ...(avatarUrl && { avatar: avatarUrl }),
+      };
+
+      const response = await authService.updateProfile(payload);
       if (response.status !== "success" || !response.result) {
         throw new Error("Cập nhật thất bại");
       }
-      setUser(response.result);
+
+      // Reset file ref sau khi upload thành công
+      avatarFileRef.current = null;
+
+      const profileResponse = await authService.getProfile();
+      if (profileResponse.status === "success" && profileResponse.result) {
+        const fullUser = authService.transformUser(profileResponse.result);
+        setUser(fullUser);
+      } else {
+        const updatedProfile = authService.transformUser(response.result);
+        const mergedUser: User = {
+          ...user,
+          ...updatedProfile,
+          avatar: updatedProfile.avatar ?? user.avatar,
+          email: updatedProfile.email ?? user.email,
+          role: updatedProfile.role ?? user.role,
+          status: updatedProfile.status ?? user.status,
+        };
+        setUser(mergedUser);
+      }
       toast({
         title: "Cập nhật thành công",
         description: "Thông tin cá nhân đã được lưu lại.",
@@ -114,7 +173,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     } catch (error: any) {
       toast({
         title: "Cập nhật thất bại",
-        description: error?.message || "Vui lòng thử lại sau",
+        description: error?.response?.data?.message || error?.message || "Vui lòng thử lại sau",
         variant: "destructive",
       });
     }
@@ -184,10 +243,19 @@ export function ProfileForm({ user }: ProfileFormProps) {
               <span>{user.phone}</span>
             </div>
           )}
-          {user.location && (
+          {user.address && (
             <div className="flex items-center gap-3 rounded-lg border px-3 py-2">
               <Icons.mapPin className="h-4 w-4 text-green-600" />
-              <span>{user.location}</span>
+              <span>{user.address}</span>
+            </div>
+          )}
+          {user.latitude && user.longitude && (
+            <div className="flex items-center gap-3 rounded-lg border px-3 py-2 text-xs">
+              <Icons.mapPin className="h-4 w-4 text-green-600" />
+              <span>
+                Tọa độ: {parseFloat(user.latitude).toFixed(6)},{" "}
+                {parseFloat(user.longitude).toFixed(6)}
+              </span>
             </div>
           )}
         </CardContent>
@@ -209,12 +277,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Họ và tên</FormLabel>
+                      <FormLabel>Họ</FormLabel>
                       <FormControl>
-                        <Input placeholder="Tên hiển thị" {...field} />
+                        <Input placeholder="Đức Sơn" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -222,18 +290,42 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 />
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Tên</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="you@example.com" {...field} />
+                        <Input placeholder="Huỳnh" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        readOnly
+                        disabled
+                        className="cursor-not-allowed bg-gray-50 text-muted-foreground"
+                        {...field}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">
+                      Email không thể thay đổi sau khi đăng ký
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
@@ -257,52 +349,91 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 )}
               />
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Số điện thoại</FormLabel>
-                      <FormControl>
-                        <Input placeholder="+84 912 345 678" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Khu vực</FormLabel>
-                      <FormControl>
-                        <Input placeholder="TP. Đà Lạt, Lâm Đồng" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Số điện thoại</FormLabel>
+                    <FormControl>
+                      <Input placeholder="0895002655" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
-                name="bio"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Giới thiệu</FormLabel>
+                    <FormLabel>Địa chỉ</FormLabel>
                     <FormControl>
-                      <Textarea
-                        rows={4}
-                        placeholder="Chia sẻ ngắn gọn về trang trại hoặc nhu cầu của bạn..."
-                        {...field}
+                      <GoogleMapsAutocomplete
+                        value={field.value || ""}
+                        latitude={form.watch("latitude")}
+                        longitude={form.watch("longitude")}
+                        onSelect={(address, lat, lng) => {
+                          field.onChange(address);
+                          form.setValue("latitude", lat, { shouldDirty: true, shouldValidate: true });
+                          form.setValue("longitude", lng, { shouldDirty: true, shouldValidate: true });
+                        }}
+                        onChange={field.onChange}
+                        placeholder="Nhập địa chỉ để tự động lấy tọa độ..."
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vĩ độ (Latitude)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="16.45160000"
+                          readOnly
+                          className="cursor-not-allowed bg-gray-50 text-muted-foreground"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Tự động lấy từ địa chỉ
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Kinh độ (Longitude)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="107.57690000"
+                          readOnly
+                          className="cursor-not-allowed bg-gray-50 text-muted-foreground"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Tự động lấy từ địa chỉ
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="flex items-center justify-end gap-3">
                 <Button

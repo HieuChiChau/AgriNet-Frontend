@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { setAuthorization } from "@/lib/apis/cache-client";
 import { useUser } from "@/hooks/use-user";
 import { UserRole } from "@/constants/role";
+import { authService } from "@/lib/services";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -58,16 +59,18 @@ export function LoginForm() {
     try {
       setIsSubmitting(true);
       const response = await loginMutation.mutateAsync(values);
+
       setAuthorization(response.result.accessToken);
-      setUser(response.result.user);
-      setIsLoggedIn(true);
+
+      const user = authService.transformUser(response.result.profile);
+      setUser(user);
 
       toast({
         title: "Đăng nhập thành công",
         description: "Chào mừng bạn trở lại AgriNet!",
       });
 
-      router.push(resolveRedirect(response.result.user.role));
+      router.push(resolveRedirect(user.role));
       router.refresh();
     } catch (error: any) {
       toast({

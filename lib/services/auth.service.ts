@@ -1,6 +1,6 @@
 import { httpRequest } from "@/lib/apis/httpRequest";
 import { ApiUrl } from "@/constants/api-url";
-import { AuthResponse, User } from "@/types/user";
+import { AuthResponse, User, UserProfile, ApiResponse } from "@/types/user";
 import {
   LoginFormData,
   RegisterFormData,
@@ -10,23 +10,48 @@ import { removeAuthorization } from "@/lib/apis/cache-client";
 
 type RegisterPayload = Omit<RegisterFormData, "confirmPassword">;
 
-export interface LoginResponse {
-  status: string;
-  result: AuthResponse;
-  message?: string;
+export interface UpdateProfilePayload {
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  address: string | null;
+  avatar?: string | null;
 }
 
-export interface RegisterResponse {
+export interface UploadAvatarResponse {
   status: string;
-  result: AuthResponse;
-  message?: string;
+  message: string;
+  result: {
+    filename: string;
+    fileUrl: string;
+  };
 }
 
-export interface ProfileResponse {
-  status: string;
-  result: User;
-  message?: string;
+function transformUserProfile(profile: UserProfile): User {
+  return {
+    id: profile.id,
+    email: profile.email,
+    name: `${profile.firstName} ${profile.lastName}`.trim(),
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    role: profile.role,
+    avatar: profile.avatar,
+    phone: profile.phone,
+    location: profile.address,
+    latitude: profile.latitude,
+    longitude: profile.longitude,
+    address: profile.address,
+    status: profile.status,
+  };
 }
+
+export type LoginResponse = ApiResponse<AuthResponse>;
+
+export type RegisterResponse = ApiResponse<AuthResponse>;
+
+export type ProfileResponse = ApiResponse<UserProfile>;
 
 export const authService = {
   login: async (data: LoginFormData): Promise<LoginResponse> => {
@@ -52,13 +77,25 @@ export const authService = {
   },
 
   updateProfile: async (
-    userId: string | number,
-    data: ProfileFormData
+    data: UpdateProfilePayload
   ): Promise<ProfileResponse> => {
-    const response = await httpRequest.put<ProfileResponse>(
-      ApiUrl.UPDATE_PROFILE(userId),
+    const response = await httpRequest.patch<ProfileResponse>(
+      ApiUrl.UPDATE_PROFILE,
       data
     );
     return response.data;
   },
+
+  uploadAvatar: async (file: File): Promise<UploadAvatarResponse> => {
+    const formData = new FormData();
+    formData.append("file", file); // Field name phải là "file" theo API
+
+    const response = await httpRequest.post<UploadAvatarResponse>(
+      ApiUrl.AVATAR,
+      formData
+    );
+    return response.data;
+  },
+
+  transformUser: transformUserProfile,
 };

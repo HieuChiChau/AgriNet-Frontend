@@ -50,7 +50,7 @@ const featureItems = [
 export function LandingFeatures() {
   return (
     <section className="relative overflow-hidden py-20">
-      <div className="absolute inset-0 -z-10 opacity-60">
+      <div className="absolute inset-0 -z-10 opacity-60 animate-fade-in">
         <Image
           src="/assets/images/landing-pattern.svg"
           alt=""
@@ -61,7 +61,7 @@ export function LandingFeatures() {
       </div>
       <div className="container space-y-12">
         <div className="flex flex-col items-center gap-8 text-center lg:flex-row lg:justify-between lg:text-left">
-          <div className="space-y-4 max-w-2xl">
+          <div className="space-y-4 max-w-2xl animate-fade-in-up animate-delay-100">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-green-600">
               Vận hành toàn diện
             </p>
@@ -72,28 +72,34 @@ export function LandingFeatures() {
               Chúng tôi kết hợp dữ liệu thời gian thực, AI dự báo và mạng lưới logistics để tạo ra trải nghiệm liền mạch cho nông dân, thương lái và doanh nghiệp.
             </p>
           </div>
-          <div className="hidden lg:block">
+          <div className="hidden lg:block animate-slide-in-right animate-delay-200">
             <div className="relative">
-              <div className="absolute -top-4 -right-6 h-24 w-24 rounded-full bg-white/40 blur-2xl" />
-              <Image
-                src="/assets/images/landing-hero-illustration.svg"
-                alt="Minh hoạ tính năng"
-                width={360}
-                height={270}
-                className="rounded-3xl shadow-2xl ring-1 ring-white/40"
-              />
+              <div className="absolute -top-4 -right-6 h-24 w-24 rounded-full bg-white/40 blur-2xl animate-float-slow" />
+              <div className="animate-float-slow">
+                <Image
+                  src="/assets/images/landing-hero-illustration.svg"
+                  alt="Minh hoạ tính năng"
+                  width={360}
+                  height={270}
+                  className="rounded-3xl shadow-2xl ring-1 ring-white/40"
+                />
+              </div>
             </div>
           </div>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {featureItems.map((item) => (
+          {featureItems.map((item, index) => (
             <Card
               key={item.title}
-              className="border-white/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-all hover:-translate-y-1 hover:border-green-200 hover:shadow-2xl"
+              className={`border-white/60 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70 transition-all hover:-translate-y-1 hover:border-green-200 hover:shadow-2xl animate-fade-in-up`}
+              style={{
+                animationDelay: `${0.1 + index * 0.1}s`,
+                opacity: 0,
+              }}
             >
               <CardHeader>
                 <div
-                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${item.gradient} text-white shadow-md`}
+                  className={`mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br ${item.gradient} text-white shadow-md transition-transform hover:scale-110`}
                 >
                   <item.icon className="h-6 w-6" />
                 </div>

@@ -12,11 +12,16 @@ const avatarSchema = z
   .or(z.literal("").transform(() => undefined));
 
 export const profileSchema = z.object({
-  name: z
+  firstName: z
     .string()
     .trim()
-    .min(2, "Tên phải có ít nhất 2 ký tự")
-    .max(100, "Tên tối đa 100 ký tự"),
+    .min(1, "Họ là bắt buộc")
+    .max(50, "Họ tối đa 50 ký tự"),
+  lastName: z
+    .string()
+    .trim()
+    .min(1, "Tên là bắt buộc")
+    .max(50, "Tên tối đa 50 ký tự"),
   email: z
     .string()
     .trim()
@@ -30,12 +35,23 @@ export const profileSchema = z.object({
     .refine(
       (value) => !value || /^[0-9\-\+\s]{8,15}$/.test(value),
       "Số điện thoại không hợp lệ"
-    ),
-  location: z
+    )
+    .or(z.literal("").transform(() => null)),
+  address: z
     .string()
     .trim()
     .optional()
-    .or(z.literal("").transform(() => undefined)),
+    .or(z.literal("").transform(() => null)),
+  latitude: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal("").transform(() => null)),
+  longitude: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal("").transform(() => null)),
   bio: z
     .string()
     .trim()

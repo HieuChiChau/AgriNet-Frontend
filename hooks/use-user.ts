@@ -15,9 +15,20 @@ export const useUser = create<UserStore>()(
     (set) => ({
       user: null,
       isLoggedIn: false,
-      setUser: (user) => set({ user, isLoggedIn: !!user }),
+
+      setUser: (user) =>
+        set({
+          user,
+          isLoggedIn: !!user,
+        }),
+
       setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
-      logout: () => set({ user: null, isLoggedIn: false }),
+
+      logout: () =>
+        set({
+          user: null,
+          isLoggedIn: false,
+        }),
     }),
     {
       name: "user-storage",

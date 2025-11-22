@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@/hooks/use-user";
 import { authService } from "@/lib/services";
 import { getAuthorizationClient } from "@/lib/apis/cache-client";
-// import { AgriNetRoutes } from "@/constants/route";
 import { UserRole } from "@/constants/role";
 import Loading from "@/app/loading_screen";
 import { useToast } from "@/hooks/use-toast";
@@ -27,11 +26,6 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
         setIsChecking(true);
         const token = getAuthorizationClient();
         const isManagePage = pathname.startsWith("/manage");
-        // const isPublicPage = AgriNetRoutes.Public.some((route) =>
-        //   pathname.startsWith(route)
-        // );
-        // const isFarmerPage = pathname.startsWith("/farmer");
-        // const isCustomerPage = pathname.startsWith("/customer");
 
         if (!token) {
           setIsChecking(false);
@@ -42,10 +36,10 @@ const AuthWrapper: React.FC<AuthWrapperProps> = ({ children }) => {
           try {
             const response = await authService.getProfile();
             if (response.status === "success" && response.result) {
-              setUser(response.result);
-              setIsLoggedIn(true);
+              const user = authService.transformUser(response.result);
+              setUser(user);
 
-              if (isManagePage && response.result.role !== UserRole.Admin) {
+              if (isManagePage && user.role !== UserRole.Admin) {
                 toast({
                   title: "Không có quyền truy cập",
                   description: "Bạn không có quyền truy cập trang này",

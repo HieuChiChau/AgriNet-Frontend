@@ -5,8 +5,8 @@ import * as fs from "fs";
 
 export enum UserRole {
   SUPER_ADMIN = 1,
-  FARMER = 2,
-  CUSTOMER = 3,
+  CUSTOMER = 2,
+  FARMER = 3,
 }
 
 const CATEGORIES = [
@@ -17,14 +17,14 @@ const CATEGORIES = [
 
 type CategoryName = (typeof CATEGORIES)[number]["name"];
 
-// ========== 2. TYPES ==========
+// ========== 2. TYPES (theo schema bạn đưa) ==========
 
 interface Farmer {
   email: string;
   firstName: string;
   lastName: string;
   phone?: string;
-  role: UserRole.FARMER; // 2
+  role: 3; // FARMER
   latitude?: number;
   longitude?: number;
   address?: string;
@@ -36,7 +36,7 @@ interface Customer {
   firstName: string;
   lastName: string;
   phone?: string;
-  role: UserRole.CUSTOMER; // 3
+  role: 2; // CUSTOMER
   latitude?: number;
   longitude?: number;
   address?: string;
@@ -49,6 +49,9 @@ interface Post {
   categoryName: CategoryName;
   customerEmail: string;
   status: 1;
+  productName: string;
+  price?: string;
+  quantity?: string;
 }
 
 // ========== 3. DATASET VIỆT NAM ==========
@@ -122,7 +125,7 @@ const VI_STREET_NAMES = [
   "Quang Trung",
 ];
 
-// Một số cụm địa điểm trên khắp Việt Nam
+// Một số cụm địa điểm trên khắp Việt Nam để random lat/long & địa chỉ
 const VN_BASE_LOCATIONS = [
   {
     province: "Hà Nội",
@@ -238,7 +241,7 @@ const VN_BASE_LOCATIONS = [
   },
 ];
 
-// Các loại nông sản cho bài post
+// Nông sản theo category
 const VEGETABLE_ITEMS = [
   "rau cải xanh",
   "rau muống",
@@ -277,7 +280,7 @@ const INDUSTRIAL_ITEMS = [
   "cọ dầu",
 ];
 
-// ========== 4. HELPERS ==========
+// ========== 4. HELPERS CHUẨN HÓA ==========
 
 // Bỏ dấu để tạo email
 function removeVietnameseTones(str: string): string {
@@ -288,6 +291,7 @@ function removeVietnameseTones(str: string): string {
     .replace(/Đ/g, "D");
 }
 
+// Tên Việt
 function makeVietnameseFullName(): { firstName: string; lastName: string } {
   const gender = faker.helpers.arrayElement<"male" | "female">([
     "male",
@@ -300,11 +304,11 @@ function makeVietnameseFullName(): { firstName: string; lastName: string } {
       ? faker.helpers.arrayElement(VI_FIRST_NAMES_MALE)
       : faker.helpers.arrayElement(VI_FIRST_NAMES_FEMALE);
 
-  const firstName = `${midName} ${firstNameCore}`; // để FE hiển thị "Văn A" / "Thị B"
-
+  const firstName = `${midName} ${firstNameCore}`; // Ví dụ: "Văn Huy", "Thị Thảo"
   return { firstName, lastName };
 }
 
+// Email sạch
 function makeEmailFromName(firstName: string, lastName: string): string {
   const full = `${lastName} ${firstName}`;
   const noTone = removeVietnameseTones(full)
@@ -317,6 +321,7 @@ function makeEmailFromName(firstName: string, lastName: string): string {
   return `${noTone}${num}@example.com`;
 }
 
+// SĐT Việt Nam
 function makeVietnamPhone(): string {
   const prefixes = ["03", "05", "07", "08", "09"];
   const prefix = faker.helpers.arrayElement(prefixes);
@@ -324,7 +329,7 @@ function makeVietnamPhone(): string {
   return `${prefix}${rest}`;
 }
 
-// Random 1 cụm vị trí tại VN + jitter nhẹ cho đa dạng lat/long
+// Địa chỉ + lat/long trong VN
 function randomVNLocation() {
   const base = faker.helpers.arrayElement(VN_BASE_LOCATIONS);
   const latOffset = faker.number.float({
@@ -350,7 +355,7 @@ function randomVNLocation() {
   return { address, latitude, longitude, province: base.province };
 }
 
-// ========== 5. FACTORY: FARMER & CUSTOMER ==========
+// ========== 5. FACTORY: FARMERS & CUSTOMERS ==========
 
 function createFarmer(): Farmer {
   const { firstName, lastName } = makeVietnameseFullName();
@@ -362,7 +367,7 @@ function createFarmer(): Farmer {
     firstName,
     lastName,
     phone: makeVietnamPhone(),
-    role: UserRole.FARMER,
+    role: 3, // FARMER
     latitude,
     longitude,
     address,
@@ -380,7 +385,7 @@ function createCustomer(): Customer {
     firstName,
     lastName,
     phone: makeVietnamPhone(),
-    role: UserRole.CUSTOMER,
+    role: 2, // CUSTOMER
     latitude,
     longitude,
     address,
@@ -388,7 +393,17 @@ function createCustomer(): Customer {
   };
 }
 
-// ========== 6. FACTORY: POSTS (tiêu đề & content sạch, theo category) ==========
+// ========== 6. FACTORY: POSTS (kèm productName, price, quantity) ==========
+
+function pickProductName(categoryName: CategoryName): string {
+  if (categoryName === "Rau củ") {
+    return faker.helpers.arrayElement(VEGETABLE_ITEMS);
+  }
+  if (categoryName === "Cây ăn quả") {
+    return faker.helpers.arrayElement(FRUIT_ITEMS);
+  }
+  return faker.helpers.arrayElement(INDUSTRIAL_ITEMS);
+}
 
 function makePostTitle(
   categoryName: CategoryName,
@@ -413,16 +428,10 @@ function makePostTitle(
 function makePostContent(
   categoryName: CategoryName,
   productName: string,
-  province: string
+  province: string,
+  quantityKg: number,
+  pricePerKg: number
 ): string {
-  const quantityKg = faker.number.int({ min: 100, max: 5000 });
-  const pricePerKg = faker.number.int({ min: 5000, max: 60000 });
-  const harvestTime = faker.helpers.arrayElement([
-    "vụ hiện tại",
-    "vụ tới",
-    "2 tuần gần đây",
-    "tháng này",
-  ]);
   const quality = faker.helpers.arrayElement([
     "đạt chuẩn an toàn thực phẩm",
     "trồng theo hướng hữu cơ",
@@ -443,7 +452,7 @@ function makePostContent(
 
   const p1 = `Bên mình đang có ${quantityKg.toLocaleString(
     "vi-VN"
-  )} kg ${productName} ${harvestTime} tại khu vực ${province}, chất lượng ${quality}. Hàng được thu hoạch và sơ chế trong ngày, bảo quản đúng quy trình để giữ độ tươi ngon.`;
+  )} kg ${productName} vụ hiện tại tại khu vực ${province}, chất lượng ${quality}. Hàng được thu hoạch và sơ chế trong ngày, bảo quản đúng quy trình để giữ độ tươi ngon.`;
 
   const p2 = `Giá đề xuất khoảng ${pricePerKg.toLocaleString(
     "vi-VN"
@@ -454,24 +463,27 @@ function makePostContent(
   return `${p1}\n\n${p2}\n\n${p3}`;
 }
 
-function pickProductName(categoryName: CategoryName): string {
-  if (categoryName === "Rau củ") {
-    return faker.helpers.arrayElement(VEGETABLE_ITEMS);
-  }
-  if (categoryName === "Cây ăn quả") {
-    return faker.helpers.arrayElement(FRUIT_ITEMS);
-  }
-  return faker.helpers.arrayElement(INDUSTRIAL_ITEMS);
-}
-
 function createPost(customers: Customer[]): Post {
   const customer = faker.helpers.arrayElement(customers);
-  const loc = randomVNLocation(); // dùng để lấy province cho nội dung
+  const loc = randomVNLocation(); // dùng province cho nội dung
   const category = faker.helpers.arrayElement(CATEGORIES);
   const productName = pickProductName(category.name);
 
+  // số lượng & giá
+  const quantityKg = faker.number.int({ min: 100, max: 5000 });
+  const pricePerKg = faker.number.int({ min: 5000, max: 60000 });
+
   const title = makePostTitle(category.name, productName, loc.province);
-  const content = makePostContent(category.name, productName, loc.province);
+  const content = makePostContent(
+    category.name,
+    productName,
+    loc.province,
+    quantityKg,
+    pricePerKg
+  );
+
+  const priceString = `${pricePerKg.toLocaleString("vi-VN")} đ/kg`;
+  const quantityString = `${quantityKg.toLocaleString("vi-VN")} kg`;
 
   return {
     title,
@@ -479,15 +491,18 @@ function createPost(customers: Customer[]): Post {
     categoryName: category.name,
     customerEmail: customer.email,
     status: 1,
+    productName,
+    price: priceString,
+    quantity: quantityString,
   };
 }
 
 // ========== 7. MAIN GENERATOR ==========
 
 function main() {
-  const farmerCount = 100; // chỉnh tùy bạn
-  const customerCount = 300; // chỉnh tùy bạn
-  const postCount = 800; // chỉnh tùy bạn
+  const farmerCount = 100;
+  const customerCount = 300;
+  const postCount = 800;
 
   const farmers: Farmer[] = [];
   const customers: Customer[] = [];

@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { setAuthorization } from "@/lib/apis/cache-client";
 import { useUser } from "@/hooks/use-user";
 import { UserRole } from "@/constants/role";
+import { authService } from "@/lib/services";
 
 export function SignupForm() {
   const router = useRouter();
@@ -55,16 +56,18 @@ export function SignupForm() {
     try {
       setIsSubmitting(true);
       const response = await registerMutation.mutateAsync(values);
+
       setAuthorization(response.result.accessToken);
-      setUser(response.result.user);
-      setIsLoggedIn(true);
+
+      const user = authService.transformUser(response.result.profile);
+      setUser(user);
 
       toast({
         title: "Đăng ký thành công",
         description: "Tài khoản của bạn đã sẵn sàng!",
       });
 
-      router.push(resolveRedirect(response.result.user.role));
+      router.push(resolveRedirect(user.role));
       router.refresh();
     } catch (error: any) {
       toast({
