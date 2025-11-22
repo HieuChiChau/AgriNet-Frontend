@@ -27,4 +27,7 @@ export const ApiUrl = {
 
   // Categories
   CATEGORIES: "/categories",
+
+  // Users
+  GET_USERS: "/users/list-user",
 };

@@ -24,6 +24,12 @@ const postKeys = {
   }) => [...postKeys.all, "customers", params] as const,
   customerById: (id: string | number) =>
     [...postKeys.all, "customers", id] as const,
+  users: (params?: {
+    page?: number;
+    limit?: number;
+    name?: string;
+    role?: number;
+  }) => [...postKeys.all, "users", params] as const,
 };
 
 export function usePosts(params?: PostSearchParams) {
@@ -83,6 +89,18 @@ export function useCustomer(id: string | number) {
     queryKey: postKeys.customerById(id),
     queryFn: () => postService.getCustomerById(id),
     enabled: !!id,
+  });
+}
+
+export function useUsers(params?: {
+  page?: number;
+  limit?: number;
+  name?: string;
+  role?: number;
+}) {
+  return useQuery({
+    queryKey: postKeys.users(params),
+    queryFn: () => postService.getUsers(params),
   });
 }
 

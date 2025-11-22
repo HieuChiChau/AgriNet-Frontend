@@ -6,14 +6,62 @@ import { PostForm } from "@/components/organisms/post/post-form";
 import { CreatePostFormData } from "@/lib/validations";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/atoms/card";
 import { useUser } from "@/hooks/use-user";
-import { useCreatePostMutation, useUploadPostImageMutation } from "@/hooks/mutations/posts";
+import { useUpdatePostMutation, useUploadPostImageMutation } from "@/hooks/mutations/posts";
+import { usePost } from "@/hooks/query/posts";
+import { Loader2 } from "lucide-react";
 
-export default function CreatePostPage() {
+interface EditPostPageProps {
+  params: { id: string };
+}
+
+export default function EditPostPage({ params }: EditPostPageProps) {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useUser();
-  const createPostMutation = useCreatePostMutation();
+  const updatePostMutation = useUpdatePostMutation();
   const uploadImageMutation = useUploadPostImageMutation();
+  const { data, isLoading, isError } = usePost(params.id);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-green-700">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <p className="text-sm">Đang tải bài viết...</p>
+      </div>
+    );
+  }
+
+  if (isError || !data || data.status !== "success") {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <p className="text-lg font-semibold text-gray-900">
+          Không tìm thấy bài viết
+        </p>
+        <p className="text-sm text-gray-500">
+          Bài viết có thể đã bị xóa hoặc không tồn tại.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push("/farmer/posts")}
+          className="rounded-full border border-green-200 px-4 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-50"
+        >
+          Quay lại
+        </button>
+      </div>
+    );
+  }
+
+  const postData = data.result;
+
+  const postAddress = (postData as any).address || postData.user.address || "";
+  const postLatitude = (postData as any).latitude || postData.user.latitude || "";
+  const postLongitude = (postData as any).longitude || postData.user.longitude || "";
+
+  const defaultValues: Partial<CreatePostFormData> = {
+    title: postData.title,
+    content: postData.content,
+    images: postData.images.map((img) => img.url),
+  };
 
   const handleSubmit = async (
     data: CreatePostFormData & {
@@ -45,6 +93,11 @@ export default function CreatePostPage() {
           }
         }
       }
+
+      const existingImages = data.images?.filter((img) =>
+        typeof img === "string" && (img.startsWith("http") || img.startsWith("https"))
+      ) || [];
+      const finalImages = [...existingImages, ...imageUrls];
 
       let finalAddress: string | null = null;
       let finalLatitude: number | null = null;
@@ -88,24 +141,27 @@ export default function CreatePostPage() {
       const payload = {
         title: data.title,
         content: data.content,
-        images: imageUrls,
+        images: finalImages,
         latitude: finalLatitude ?? 0,
         longitude: finalLongitude ?? 0,
         address: finalAddress ?? "",
       };
 
-      await createPostMutation.mutateAsync(payload as any);
+      await updatePostMutation.mutateAsync({
+        id: params.id,
+        data: payload as any,
+      });
 
       toast({
         title: "Thành công",
-        description: "Bài đăng đã được tạo thành công!",
+        description: "Bài đăng đã được cập nhật thành công!",
       });
       router.push("/farmer/posts");
     } catch (error: any) {
       if (!error?.response) {
         toast({
           title: "Lỗi",
-          description: error?.message || "Không thể tạo bài đăng",
+          description: error?.message || "Không thể cập nhật bài đăng",
           variant: "destructive",
         });
       }
@@ -115,9 +171,9 @@ export default function CreatePostPage() {
   return (
     <div className="container max-w-4xl space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold">Đăng bài mới</h1>
+        <h1 className="text-3xl font-bold">Chỉnh sửa bài đăng</h1>
         <p className="text-muted-foreground">
-          Tạo bài đăng để bán nông sản của bạn
+          Cập nhật thông tin bài đăng của bạn
         </p>
       </div>
 
@@ -125,13 +181,18 @@ export default function CreatePostPage() {
         <CardHeader>
           <CardTitle>Thông tin sản phẩm</CardTitle>
           <CardDescription>
-            Điền đầy đủ thông tin để bài đăng của bạn được nhiều người quan tâm
+            Cập nhật thông tin để bài đăng của bạn được nhiều người quan tâm
           </CardDescription>
         </CardHeader>
         <CardContent>
           <PostForm
             onSubmit={handleSubmit}
-            isLoading={createPostMutation.isPending || uploadImageMutation.isPending}
+            isLoading={updatePostMutation.isPending || uploadImageMutation.isPending}
+            defaultValues={defaultValues}
+            isEditMode={true}
+            defaultAddress={postAddress}
+            defaultLatitude={postLatitude}
+            defaultLongitude={postLongitude}
           />
         </CardContent>
       </Card>

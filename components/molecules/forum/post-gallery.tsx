@@ -33,7 +33,7 @@ export function ForumPostGallery({ title, images }: ForumPostGalleryProps) {
   const hasMultipleImages = totalImages > 1;
 
   return (
-    <div className="mt-6 space-y-4">
+    <div className="mt-6 space-y-4 px-6">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl bg-gray-100">
         {images!.map((image, idx) => (
           <Image

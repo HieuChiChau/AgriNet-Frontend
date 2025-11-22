@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +30,10 @@ interface PostFormProps {
   }) => Promise<void>;
   isLoading?: boolean;
   defaultValues?: Partial<CreatePostFormData>;
+  isEditMode?: boolean;
+  defaultAddress?: string;
+  defaultLatitude?: string;
+  defaultLongitude?: string;
 }
 
 const MAX_IMAGES = 5;
@@ -40,13 +44,34 @@ interface ImageWithFile {
   file: File;
 }
 
-export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFormProps) {
+export function PostForm({
+  onSubmit,
+  isLoading = false,
+  defaultValues,
+  isEditMode = false,
+  defaultAddress = "",
+  defaultLatitude = "",
+  defaultLongitude = "",
+}: PostFormProps) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageFiles, setImageFiles] = useState<ImageWithFile[]>([]);
-  const [address, setAddress] = useState("");
-  const [latitude, setLatitude] = useState<string>("");
-  const [longitude, setLongitude] = useState<string>("");
+  const [existingImages, setExistingImages] = useState<string[]>(defaultValues?.images?.filter(img => typeof img === "string" && (img.startsWith("http") || img.startsWith("https"))) || []);
+  const [address, setAddress] = useState(defaultAddress);
+  const [latitude, setLatitude] = useState<string>(defaultLatitude);
+  const [longitude, setLongitude] = useState<string>(defaultLongitude);
+
+  useEffect(() => {
+    if (isEditMode && defaultAddress) {
+      setAddress(defaultAddress);
+    }
+    if (isEditMode && defaultLatitude) {
+      setLatitude(defaultLatitude);
+    }
+    if (isEditMode && defaultLongitude) {
+      setLongitude(defaultLongitude);
+    }
+  }, [isEditMode, defaultAddress, defaultLatitude, defaultLongitude]);
 
   const form = useForm<CreatePostFormData>({
     resolver: zodResolver(createPostSchema),
@@ -61,13 +86,15 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
   const images = form.watch("images") ?? [];
 
   const handleSubmit = async (data: CreatePostFormData) => {
-    await onSubmit({
+    const submitData = {
       ...data,
       imageFiles: imageFiles.map((img) => img.file),
-      address: address || undefined,
-      latitude: latitude || undefined,
-      longitude: longitude || undefined,
-    });
+      address: address?.trim() || undefined,
+      latitude: latitude?.trim() || undefined,
+      longitude: longitude?.trim() || undefined,
+    };
+
+    await onSubmit(submitData);
   };
 
   const readFileAsDataURL = (file: File) =>
@@ -83,7 +110,7 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
     event.target.value = "";
     if (!files.length) return;
 
-    const remainingSlots = MAX_IMAGES - images.length;
+    const remainingSlots = MAX_IMAGES - (existingImages.length + imageFiles.length);
     if (remainingSlots <= 0) {
       toast({
         title: "Đã đạt giới hạn",
@@ -117,15 +144,22 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
     );
 
     setImageFiles([...imageFiles, ...newImageFiles]);
-    const dataUrls = [...images, ...newImageFiles.map((img) => img.dataUrl)];
-    form.setValue("images", dataUrls, { shouldDirty: true });
+    const allImages = [...existingImages, ...imageFiles.map((img) => img.dataUrl), ...newImageFiles.map((img) => img.dataUrl)];
+    form.setValue("images", allImages, { shouldDirty: true });
   };
 
   const handleRemoveImage = (index: number) => {
     const filteredFiles = imageFiles.filter((_, idx) => idx !== index);
     setImageFiles(filteredFiles);
-    const filteredImages = images.filter((_, idx) => idx !== index);
-    form.setValue("images", filteredImages, { shouldDirty: true });
+    const allImages = [...existingImages, ...filteredFiles.map((img) => img.dataUrl)];
+    form.setValue("images", allImages, { shouldDirty: true });
+  };
+
+  const handleRemoveExistingImage = (index: number) => {
+    const filtered = existingImages.filter((_, idx) => idx !== index);
+    setExistingImages(filtered);
+    const allImages = [...filtered, ...imageFiles.map((img) => img.dataUrl)];
+    form.setValue("images", allImages, { shouldDirty: true });
   };
 
   const triggerSelectImages = () => {
@@ -219,6 +253,27 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
                   onChange={handleImageUpload}
                 />
                 <div className="flex flex-wrap gap-3">
+                  {existingImages.map((imgUrl, idx) => (
+                    <div
+                      key={`existing-${imgUrl}-${idx}`}
+                      className="relative h-28 w-28 overflow-hidden rounded-xl border border-green-100 shadow-sm"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imgUrl}
+                        alt={`Ảnh hiện có ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        aria-label="Xóa ảnh"
+                        className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                        onClick={() => handleRemoveExistingImage(idx)}
+                      >
+                        <Icons.close className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
                   {imageFiles.map((img, idx) => (
                     <div
                       key={`${img.dataUrl}-${idx}`}
@@ -226,7 +281,7 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
                     >
                       <Image
                         src={img.dataUrl}
-                        alt={`Ảnh ${idx + 1}`}
+                        alt={`Ảnh mới ${idx + 1}`}
                         fill
                         sizes="112px"
                         className="object-cover"
@@ -234,14 +289,14 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
                       <button
                         type="button"
                         aria-label="Xóa ảnh"
-                        className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
+                        className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
                         onClick={() => handleRemoveImage(idx)}
                       >
                         <Icons.close className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
-                  {imageFiles.length < MAX_IMAGES && (
+                  {existingImages.length + imageFiles.length < MAX_IMAGES && (
                     <button
                       type="button"
                       onClick={triggerSelectImages}
@@ -268,7 +323,7 @@ export function PostForm({ onSubmit, isLoading = false, defaultValues }: PostFor
             Hủy
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Đang xử lý..." : "Đăng bài"}
+            {isLoading ? "Đang xử lý..." : isEditMode ? "Cập nhật" : "Đăng bài"}
           </Button>
         </div>
       </form>

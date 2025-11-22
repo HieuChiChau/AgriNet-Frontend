@@ -90,18 +90,15 @@ export function PostCommentSection({ postId }: PostCommentSectionProps) {
       const now = new Date();
       const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-      // Dưới 1 phút
       if (diffInSeconds < 60) {
         return "Vừa xong";
       }
 
-      // Dưới 1 giờ - hiển thị số phút cụ thể
       const diffInMinutes = Math.floor(diffInSeconds / 60);
       if (diffInMinutes < 60) {
         return `${diffInMinutes} phút trước`;
       }
 
-      // Từ 1 giờ trở lên - dùng formatDistanceToNow
       return formatDistanceToNow(date, {
         addSuffix: true,
         locale: vi,

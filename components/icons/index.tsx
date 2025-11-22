@@ -30,6 +30,7 @@ import {
   Settings,
   SunMedium,
   Trash,
+  Pencil,
   User,
   User2Icon,
   UserX2Icon,
@@ -50,7 +51,9 @@ import {
   Heart,
   Mail,
   Phone,
-  BarChart3
+  BarChart3,
+  Clock,
+  Tag
 } from "lucide-react";
 
 export type Icon = LucideIcon;
@@ -66,6 +69,7 @@ export const Icons = {
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   trash: Trash,
+  edit: Pencil,
   employee: UserX2Icon,
   post: FileText,
   page: File,
@@ -108,6 +112,9 @@ export const Icons = {
   heart: Heart,
   mail: Mail,
   phone: Phone,
+  clock: Clock,
+  tag: Tag,
+  image: Image,
 
   gitHub: ({ ...props }: LucideProps) => (
     <svg

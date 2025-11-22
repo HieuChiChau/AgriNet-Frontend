@@ -10,7 +10,6 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, className }: PostCardProps) {
-  console.log(post)
   return (
     <Link href={`/posts/${post.id}`}>
       <Card className={cn(

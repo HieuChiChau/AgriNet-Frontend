@@ -12,7 +12,7 @@ export const FarmerNavItems: NavLinkItem[] = [
   { href: "/farmer/create", label: "Đăng bài mới", icon: "add" },
   {
     href: "/farmer/customers",
-    label: "Danh sách thương lái",
+    label: "Danh sách người dùng",
     icon: "providers",
   },
 ];

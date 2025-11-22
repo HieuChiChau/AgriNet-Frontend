@@ -2,12 +2,16 @@
 
 import type { MyPost } from "@/lib/services/post.service";
 import { Post } from "@/types/post";
-import { PostList } from "@/components/molecules/post/post-list";
+import { MyPostList } from "@/components/molecules/post/my-post-list";
 import { ProductCategory, PostStatus } from "@/types/post";
 import { authService } from "@/lib/services";
 import { useMyPosts } from "@/hooks/query/posts";
 
 function transformMyPostToPost(myPost: MyPost): Post {
+  const postAddress = myPost.address || myPost.user.address || "";
+  const postLatitude = myPost.latitude || myPost.user.latitude || "";
+  const postLongitude = myPost.longitude || myPost.user.longitude || "";
+
   return {
     id: myPost.id,
     title: myPost.title,
@@ -27,16 +31,16 @@ function transformMyPostToPost(myPost: MyPost): Post {
         ? "tấn"
         : "kg",
     location: {
-      province: myPost.user.address
-        ? myPost.user.address.split(",").slice(-2, -1)[0]?.trim() || ""
+      province: postAddress
+        ? postAddress.split(",").slice(-2, -1)[0]?.trim() || ""
         : "",
-      district: myPost.user.address
-        ? myPost.user.address.split(",").slice(-3, -2)[0]?.trim() || ""
+      district: postAddress
+        ? postAddress.split(",").slice(-3, -2)[0]?.trim() || ""
         : "",
-      address: myPost.user.address || "",
+      address: postAddress,
       coordinates: {
-        lat: parseFloat(myPost.user.latitude) || 0,
-        lng: parseFloat(myPost.user.longitude) || 0,
+        lat: parseFloat(postLatitude) || 0,
+        lng: parseFloat(postLongitude) || 0,
       },
     },
     images: myPost.images.map((img) => img.url),
@@ -55,8 +59,8 @@ function transformMyPostToPost(myPost: MyPost): Post {
       status: myPost.user.status,
     }),
     farmerId: myPost.user.id,
-    createdAt: "",
-    updatedAt: "",
+    createdAt: myPost.createdAt || "",
+    updatedAt: myPost.updatedAt || "",
   };
 }
 
@@ -80,7 +84,7 @@ export default function FarmerPostsPage() {
         </p>
       </div>
 
-      <PostList
+      <MyPostList
         posts={posts}
         isLoading={isLoading}
         emptyMessage="Bạn chưa có bài đăng nào. Hãy tạo bài đăng mới!"

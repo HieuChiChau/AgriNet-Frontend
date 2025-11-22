@@ -66,8 +66,15 @@ export function useDeletePostMutation() {
   return useMutation({
     mutationFn: (id: string | number) => postService.deletePost(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...postKeys.all, "my-posts"],
+        exact: false,
+      });
       queryClient.invalidateQueries({ queryKey: postKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: postKeys.myPosts() });
+      toast({
+        title: "Thành công",
+        description: "Bài đăng đã được xóa thành công!",
+      });
     },
     onError: (error: any) => {
       toast({

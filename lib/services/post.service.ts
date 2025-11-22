@@ -33,6 +33,13 @@ export interface PostDetailResponse {
     id: string;
     title: string;
     content: string;
+    status?: number;
+    latitude?: string | null;
+    longitude?: string | null;
+    address?: string | null;
+    createdAt?: string;
+    updatedAt?: string;
+    deletedAt?: string | null;
     category: {
       id: string;
       name: string;
@@ -74,6 +81,34 @@ export interface CustomersResponse {
   message?: string;
 }
 
+export interface UserItem {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  avatar: string | null;
+  latitude: string;
+  longitude: string;
+  address: string;
+  role: number;
+  status: number;
+}
+
+export interface UsersResponse {
+  status: string;
+  message: string;
+  result: {
+    data: UserItem[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPage: number;
+    };
+  };
+}
+
 export interface UploadPostImageResponse {
   status: string;
   message: string;
@@ -106,6 +141,13 @@ export interface MyPost {
   id: string;
   title: string;
   content: string;
+  status?: number;
+  latitude?: string | null;
+  longitude?: string | null;
+  address?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
   category: MyPostCategory | null;
   user: {
     id: string;
@@ -165,7 +207,7 @@ export const postService = {
     id: string | number,
     data: UpdatePostData
   ): Promise<PostResponse> => {
-    const response = await httpRequest.put<PostResponse>(
+    const response = await httpRequest.patch<PostResponse>(
       ApiUrl.UPDATE_POST(id),
       data
     );
@@ -240,6 +282,18 @@ export const postService = {
         params,
       }
     );
+    return response.data;
+  },
+
+  getUsers: async (params?: {
+    page?: number;
+    limit?: number;
+    name?: string;
+    role?: number;
+  }): Promise<UsersResponse> => {
+    const response = await httpRequest.get<UsersResponse>(ApiUrl.GET_USERS, {
+      params,
+    });
     return response.data;
   },
 };

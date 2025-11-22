@@ -156,14 +156,9 @@ export function GoogleMapsAutocomplete({
         return;
       }
 
-      const callbackName = `initGoogleMaps_${Date.now()}`;
-
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
-      script.async = true;
-      script.defer = true;
+      const callbackName = "initGoogleMapsCallback";
 
       (window as any)[callbackName] = () => {
-        delete (window as any)[callbackName];
         requestAnimationFrame(() => {
           if (inputRef.current) {
             initializeAutocomplete();
@@ -171,9 +166,15 @@ export function GoogleMapsAutocomplete({
         });
       };
 
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=${callbackName}`;
+      script.async = true;
+      script.defer = true;
+
       script.onerror = () => {
         console.error("Không thể load Google Maps API");
-        delete (window as any)[callbackName];
+        if ((window as any)[callbackName]) {
+          delete (window as any)[callbackName];
+        }
       };
 
       document.head.appendChild(script);

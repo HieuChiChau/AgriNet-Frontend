@@ -12,10 +12,16 @@ import { Icons } from "@/components/icons";
 import Link from "next/link";
 import { ForumPostGallery } from "@/components/molecules/forum/post-gallery";
 import { PostCommentSection } from "@/components/organisms/post/post-comment-section";
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
+import Image from "next/image";
 
 function transformPostDetailToPost(detail: PostDetailResponse["result"]): Post {
-  return {
+  const postAddress = detail.address || detail.user.address || "";
+  const postLatitude = detail.latitude || detail.user.latitude || "";
+  const postLongitude = detail.longitude || detail.user.longitude || "";
 
+  return {
     id: detail.id,
     title: detail.title,
     description: detail.content,
@@ -34,16 +40,16 @@ function transformPostDetailToPost(detail: PostDetailResponse["result"]): Post {
         ? "tấn"
         : "kg",
     location: {
-      province: detail.user.address
-        ? detail.user.address.split(",").slice(-2, -1)[0]?.trim() || ""
+      province: postAddress
+        ? postAddress.split(",").slice(-2, -1)[0]?.trim() || ""
         : "",
-      district: detail.user.address
-        ? detail.user.address.split(",").slice(-3, -2)[0]?.trim() || ""
+      district: postAddress
+        ? postAddress.split(",").slice(-3, -2)[0]?.trim() || ""
         : "",
-      address: detail.user.address || "",
+      address: postAddress,
       coordinates: {
-        lat: parseFloat(detail.user.latitude) || 0,
-        lng: parseFloat(detail.user.longitude) || 0,
+        lat: parseFloat(postLatitude) || 0,
+        lng: parseFloat(postLongitude) || 0,
       },
     },
     images: detail.images.map((img) => img.url),
@@ -62,8 +68,8 @@ function transformPostDetailToPost(detail: PostDetailResponse["result"]): Post {
       status: detail.user.status,
     }),
     farmerId: detail.user.id,
-    createdAt: "",
-    updatedAt: "",
+    createdAt: detail.createdAt || "",
+    updatedAt: detail.updatedAt || "",
   };
 }
 
@@ -115,15 +121,30 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
   }
 
   const post = transformPostDetailToPost(data.result);
+  const detail = data.result;
+  const postAddress = detail.address || detail.user.address || "";
+  const postLatitude = detail.latitude || detail.user.latitude || "";
+  const postLongitude = detail.longitude || detail.user.longitude || "";
+
+  const getTimeAgo = (dateString?: string) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+    } catch {
+      return "";
+    }
+  };
 
   return (
-    <div className="bg-gradient-to-b from-green-50 via-white to-yellow-50">
-      <article className="container space-y-8 py-12">
+    <div className="bg-gradient-to-b from-green-50 via-white to-yellow-50 min-h-screen">
+      <article className="container space-y-6 py-8 max-w-5xl">
+        {/* Breadcrumb */}
         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
           {backUrl ? (
             <Link
               href={backUrl}
-              className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/90 px-3 py-1 text-green-700 shadow-sm transition hover:border-green-200 hover:text-green-800"
+              className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/90 px-3 py-1.5 text-green-700 shadow-sm transition hover:border-green-200 hover:text-green-800"
             >
               <Icons.chevronLeft className="h-4 w-4" />
               Quay lại
@@ -132,7 +153,7 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
             <button
               type="button"
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/90 px-3 py-1 text-green-700 shadow-sm transition hover:border-green-200 hover:text-green-800"
+              className="inline-flex items-center gap-2 rounded-full border border-green-100 bg-white/90 px-3 py-1.5 text-green-700 shadow-sm transition hover:border-green-200 hover:text-green-800"
             >
               <Icons.chevronLeft className="h-4 w-4" />
               Quay lại
@@ -144,28 +165,108 @@ export function PostDetailClient({ postId, from }: PostDetailClientProps) {
           </span>
         </div>
 
-        <Card className="border-green-100 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-3xl text-green-700">{post.title}</CardTitle>
-            <CardDescription className="text-base mt-4 whitespace-pre-wrap">
-              {post.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {post.images && post.images.length > 0 && (
-              <ForumPostGallery title={post.title} images={post.images} />
-            )}
+        {/* Main Card - Facebook Style */}
+        <Card className="border border-gray-200 shadow-sm bg-white overflow-hidden">
+          {/* Header - Facebook Style */}
+          <CardHeader className="pb-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3 flex-1">
+                {/* Avatar */}
+                {post.farmer.avatar ? (
+                  <Image
+                    src={post.farmer.avatar}
+                    alt={post.farmer.name}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-500 text-white text-sm font-bold flex-shrink-0">
+                    {post.farmer.firstName?.charAt(0).toUpperCase()}
+                  </div>
+                )}
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Icons.locations className="h-5 w-5 text-green-600" />
-                <span>{post.location.address || `${post.location.district}, ${post.location.province}`}</span>
+                {/* Name, Time, Location */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h3 className="font-semibold text-gray-900 hover:underline cursor-pointer">
+                      {post.farmer.name}
+                    </h3>
+                    {detail.category && (
+                      <>
+                        <span className="text-gray-500">·</span>
+                        <span className="text-sm text-green-600 font-medium">
+                          {detail.category.name}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-0.5 flex-wrap">
+                    {detail.createdAt && (
+                      <>
+                        <span>{getTimeAgo(detail.createdAt)}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Icons.user className="h-5 w-5 text-green-600" />
-                <span>{post.farmer.name}</span>
+
+              {/* More Options */}
+              <button className="p-1.5 rounded-full hover:bg-gray-100 transition">
+                <Icons.ellipsis className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+          </CardHeader>
+
+          {/* Contact Info - At the top */}
+          {(detail.user.phone || postAddress) && (
+            <div className="px-6 pb-4 border-b border-gray-100">
+              <div className="flex flex-col gap-3">
+                {detail.user.phone && (
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 flex-shrink-0">
+                      <Icons.phone className="h-4 w-4 text-green-600" />
+                    </div>
+                    <a
+                      href={`tel:${detail.user.phone}`}
+                      className="text-green-600 hover:text-green-700 hover:underline font-medium text-sm"
+                    >
+                      {detail.user.phone}
+                    </a>
+                  </div>
+                )}
+                {postAddress && (
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-50 flex-shrink-0 mt-0.5">
+                      <Icons.locations className="h-4 w-4 text-green-600" />
+                    </div>
+                    <span className="text-gray-700 text-sm leading-relaxed">{postAddress}</span>
+                  </div>
+                )}
               </div>
             </div>
+          )}
+
+          {/* Content - Above Images */}
+          <CardContent className="pt-4 pb-4">
+            {/* Title - More prominent */}
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">
+              {post.title}
+            </h2>
+
+            {/* Description/Content - Clearly different */}
+            {post.description && (
+              <div className="text-base md:text-lg text-gray-700 whitespace-pre-wrap leading-relaxed mb-4 font-normal">
+                {post.description}
+              </div>
+            )}
+
+            {/* Images - Below Content */}
+            {post.images && post.images.length > 0 && (
+              <div className="mt-4 -mx-4 sm:-mx-6">
+                <ForumPostGallery title={post.title} images={post.images} />
+              </div>
+            )}
           </CardContent>
         </Card>
 
